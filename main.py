@@ -48,6 +48,10 @@ def main():
     choice = input("請輸入選項 (1/2/3/4/5/6)： ")
 
     if choice == "1":
+        audio_ctrl.audio_test_volume()
+        whisper_ctrl.core()
+        asyncio.run(response_ctrl.core())
+        audio_ctrl.core(True)
         return
     elif choice == "2":
         whisper_ctrl.core()
@@ -64,7 +68,8 @@ def main():
         delete_files_in_output_file()
         return
     elif choice == "0":
-        whisper_ctrl.test_func()
+        # whisper_ctrl.test_func()
+        audio_ctrl.audio_test_volume()
         return
     
 
