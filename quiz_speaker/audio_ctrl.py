@@ -1,7 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 from pathlib import Path
-from .audio_maker import make_audio
+from .audio_maker import make_audio, make_volume_audio
 import os
 import pygame
 import threading
@@ -15,41 +15,33 @@ client = OpenAI(api_key=api_key)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
-input_file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt") 
-speech_file_path = os.path.join(OUTPUT_DIR, "speech.mp3") 
-speech_test_file_path = os.path.join(OUTPUT_DIR, "speech_test.mp3")
+
+speech_file_path = os.path.join(OUTPUT_DIR, "ListeningTest.mp3") 
+volume_test_file_path = os.path.join(OUTPUT_DIR, "VolumeTest.mp3")
 
 exit_flag = False
 paused = False
 playing = False  # ✅ 新增，表示是否正在播放
 
 
-def audio_test():
-    # print("\n正在產生音量測試語音檔...")
-    # with client.audio.speech.with_streaming_response.create(
-    #     model="gpt-4o-mini-tts",
-    #     voice="coral",
-    #     input="Please adjust the volume. This is a test audio file.",
-    # ) as response:
-    #     response.stream_to_file(speech_test_file_path)
-    #     print("測試語音檔已完成...")
-    #     print(f"音訊已儲存至 {speech_test_file_path}")
+def audio_test_volume():
+    make_volume_audio()
 
-    # load_audio(speech_test_file_path)
-    # input("按下 Enter 鍵開始播放音訊...")
+    load_audio(volume_test_file_path)
+    input("按下 Enter 鍵開始播放音訊...")
 
-    # while True:
-    #     t = threading.Thread(target=audio_thread)
-    #     t.start()
+    while True:
+        t = threading.Thread(target=audio_thread)
+        t.start()
 
-    #     # 等待音訊播放完成
-    #     while pygame.mixer.music.get_busy():
-    #         time.sleep(0.5)         
+        # 等待音訊播放完成
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.5)         
 
-    #     replay = input("是否再播放一次測試音檔？(y/n)： ").strip().lower()
-    #     if replay != "y":
-    #         print("關閉音量測試...")
-    #         break
+        replay = input("是否再播放一次測試音檔？(y/n)： ").strip().lower()
+        if replay != "y":
+            print("關閉音量測試...")
+            break
     return
 
 
@@ -118,14 +110,14 @@ def handle_user_commands():
         print("\n已偵測到 Ctrl+C，正在中止...")
         stop_audio()
         exit_flag = True
-
+    return
 
 
 def core(full_execution=False):
     global exit_flag
 
     if full_execution:
-        make_audio()
+            make_audio()
     else:
         make_audio_bool = input("製作題目語音檔？(y/n)： ").lower()
         if make_audio_bool == "y":
@@ -139,6 +131,10 @@ def core(full_execution=False):
         print("p: 暫停, r: 繼續, s: 停止, q: 離開")
 
     load_audio(speech_file_path)
+    if not os.path.exists(speech_file_path):
+        print(f"錯誤：找不到音訊檔案 {speech_file_path}。請先生成題目語音檔。")
+        return
+
     input("按下 Enter 鍵開始播放音訊...")
     t = threading.Thread(target=audio_thread)
     t.start()
@@ -150,6 +146,12 @@ def core(full_execution=False):
             if not playing:
                 break
             time.sleep(0.5)
+    return
+
+
+def test_func():
+    # make_audio()
+    return
 
 
 if __name__ == "__main__":
