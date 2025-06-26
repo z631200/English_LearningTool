@@ -35,15 +35,16 @@ async def write_to_listening_test_file(content: str):
 async def generate_question_from_text(text: str, quiz_count: str):
     """使用 Chat Completions API 根據文字產生多題英文題目"""
     system_prompt = "You are an assistant that generates English quiz questions based on text input."
-
     user_prompt = (
-        f"Based on the following content, generate {quiz_count} English quiz questions "
+        f"Based on the following transcript of an English listening audio, generate {quiz_count} listening comprehension quiz questions "
         f"(multiple-choice) in the following format:\n\n"
-        f"Question 1:\n<question content>\n\nA) ...\nB) ...\nC) ...\nD) ...\n\n"
+        f"Question 1:\n<question based on what listeners hear>\n\nA) ...\nB) ...\nC) ...\nD) ...\n\n"
         f"Question 2:\n...\n\nAnswer: A,B,...\n\n"
+        f"The questions must test understanding of spoken content, such as speaker's intention, tone, specific details, or implied meaning.\n"
         f"Only output the questions and answers in this format, no explanation.\n\n"
-        f"Text:\n{text}"
+        f"Transcript:\n{text}"
     )
+
 
     try:
         print("正在產生題目文字檔...")
