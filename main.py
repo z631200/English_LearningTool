@@ -4,8 +4,7 @@ import asyncio
 from transcription_maker import whisper_ctrl
 from quiz_maker import response_ctrl
 from quiz_speaker import audio_ctrl
-
-# import start_quiz.quiz_ctrl
+from start_quiz import quiz_ctrl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
@@ -52,6 +51,7 @@ def main():
         whisper_ctrl.core()
         asyncio.run(response_ctrl.core())
         audio_ctrl.core(True)
+        quiz_ctrl.core()
         return
     elif choice == "2":
         whisper_ctrl.core()
@@ -63,6 +63,7 @@ def main():
         audio_ctrl.core(True)
         return
     elif choice == "5":
+        quiz_ctrl.core()
         return
     elif choice == "6":
         delete_files_in_output_file()
