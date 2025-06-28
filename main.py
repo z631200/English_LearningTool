@@ -10,8 +10,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 TRANSCRIP_TOOL_DIR = os.path.join(BASE_DIR, "transcription_maker/tool")
 
-# 設定 tool/ 路徑進 PATH，讓 whisper 可以呼叫 ffmpeg
-# tool_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "tool"))
 os.environ["PATH"] = f"{TRANSCRIP_TOOL_DIR};{os.environ['PATH']}"
 
 def delete_files_in_output_file(full_execution = False):
@@ -37,7 +35,7 @@ def delete_files_in_output_file(full_execution = False):
         print("📂 已重置output_file資料夾")
 
 def main():
-    print("請選擇模式：")
+    print("🎛️  請選擇模式：")
     print("1. 完整啟動")
     print("2. 語音轉錄功能")
     print("3. 生成聽力題目文字檔")
@@ -69,8 +67,7 @@ def main():
         delete_files_in_output_file()
         return
     elif choice == "0":
-        # whisper_ctrl.test_func()
-        audio_ctrl.audio_test_volume()
+        audio_ctrl.core(False)
         return
     
 

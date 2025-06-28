@@ -47,7 +47,7 @@ async def generate_question_from_text(text: str, quiz_count: str):
 
 
     try:
-        print("正在產生題目文字檔...")
+        print("⏳ 正在產生題目文字檔...")
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -56,7 +56,7 @@ async def generate_question_from_text(text: str, quiz_count: str):
             ]
         )
         result = response.choices[0].message.content
-        print("題目文字檔已完成...")
+        print("✅ 題目文字檔已完成...")
         # print(result)
 
         if isinstance(result, str):

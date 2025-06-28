@@ -4,7 +4,6 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
 def extract_answer(file_path):
-
     if not os.path.exists(file_path):
         print(f"檔案不存在：{file_path}")
         return None
@@ -20,20 +19,14 @@ def extract_answer(file_path):
 
 
 def check_user_answer(correct_answer):
-    """
-    要求使用者輸入答案，並與正確答案比較
-    """
     user_input = input("\n請輸入你的答案（格式：C,C,C）：").strip().lower()
 
     if user_input == correct_answer:
-        print("答案正確！")
+        print("🥳 答案正確！")
     else:
-        print(f"答案錯誤。正確答案是：{correct_answer}")
+        print(f"😢 答案錯誤。正確答案是：{correct_answer}")
 
 def show_quiz(file_path):
-    """
-    顯示整個測驗檔案的內容
-    """
     if not os.path.exists(file_path):
         print(f"檔案不存在：{file_path}")
         return
