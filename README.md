@@ -17,11 +17,6 @@ Application for generating and conducting listening tests baesd on videos
 3. Use a TTS API to generate an audio file for the questions.
 4. Run the listening test.
 
-## 🕹️ Commands (temp)
-1. play: Play the spoken question
-2. answer: Choose from options a, b, c, or d
-3. stop: Stop audio playback
-
 ## 專案結構
 ```
 main/
@@ -46,7 +41,8 @@ main/
 ```
 
 ## 套件 (temp)
-pip install dotenv openai pygame
+pip install dotenv openai pygame pydub yt-dlp
+pip install git+https://github.com/openai/whisper.git
 
 ## reference
 1. https://platform.openai.com/docs/guides/text?api-mode=chat&prompt-example=code
