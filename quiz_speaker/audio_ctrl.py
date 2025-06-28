@@ -21,20 +21,20 @@ volume_test_file_path = os.path.join(OUTPUT_DIR, "VolumeTest.mp3")
 
 exit_flag = False
 paused = False
-playing = False  # ✅ 新增，表示是否正在播放
+playing = False
+user_command = None
 
 
 def audio_test_volume():
     make_volume_audio()
 
     load_audio(volume_test_file_path)
-    input("按下 Enter 鍵開始播放音訊...")
+    input("➡️  按下 Enter 鍵開始播放音訊...")
 
     while True:
         t = threading.Thread(target=audio_thread)
         t.start()
 
-        # 等待音訊播放完成
         while pygame.mixer.music.get_busy():
             time.sleep(0.5)         
 
@@ -68,7 +68,7 @@ def stop_audio():
     global paused, playing
     pygame.mixer.music.stop()
     paused = False
-    playing = False  # ✅ 停止播放，但不設 exit_flag
+    playing = False
 
 def audio_thread():
     global playing
@@ -80,54 +80,68 @@ def audio_thread():
     playing = False
     # print("播放完畢。")
 
+def get_user_input():
+    global user_command, exit_flag
+    while not exit_flag:
+        try:
+            command = input("輸入指令 (p: 暫停, r: 繼續, s: 停止, q: 離開程式)： ").strip().lower()
+            user_command = command
+        except EOFError:
+            break
 
 def handle_user_commands():
-    global exit_flag
+    global exit_flag, user_command
+    input_thread = threading.Thread(target=get_user_input, daemon=True)
+    input_thread.start()
+
     try:
         while not exit_flag:
+            if user_command:
+                command = user_command
+                user_command = None  # 重置輸入指令
+
+                if command == "p":
+                    pause_audio()
+                elif command == "r":
+                    unpause_audio()
+                elif command == "s":
+                    stop_audio()
+                    print("播放已停止。")
+                    exit_flag = True
+                    break
+                elif command == "q":
+                    stop_audio()
+                    print("離開程式。")
+                    exit_flag = True
+                    break
+                else:
+                    print(f"未知指令：{command}")
+
+            # 自動偵測音樂是否播放完
             if not pygame.mixer.music.get_busy() and not paused:
                 print("播放完畢。")
                 exit_flag = True
                 break
 
-            command = input("輸入指令 (p: 暫停, r: 繼續, s: 停止, q: 離開程式)： ").strip().lower()
+            time.sleep(0.1)
 
-            if command == "p":
-                pause_audio()
-            elif command == "r":
-                unpause_audio()
-            elif command == "s":
-                stop_audio()
-                exit_flag = True  # ✅ 讓外部也能知道播放結束
-                print("播放已停止。")
-                break
-            elif command == "q":
-                stop_audio()
-                exit_flag = True
-                print("離開程式。")
-                break
     except KeyboardInterrupt:
         print("\n已偵測到 Ctrl+C，正在中止...")
         stop_audio()
         exit_flag = True
-    return
 
 
-def core(full_execution=False):
+def core(full_execution=True):
     global exit_flag
 
     if full_execution:
-            make_audio()
-    else:
-        make_audio_bool = input("製作題目語音檔？(y/n)： ").lower()
-        if make_audio_bool == "y":
-            make_audio()
+        make_audio()
 
-    use_command = input("是否啟用指令控制？(y/n)： ").lower()
+    use_command = input("\n是否啟用指令控制？(y/n)： ").lower()
     if use_command != "y":
         print("將自動播放音訊...")
     else:
-        print("進入指令控制模式，輸入指令後將開始播放。")
+        print("進入指令控制模式，可輸入指令控制。")
         print("p: 暫停, r: 繼續, s: 停止, q: 離開")
 
     load_audio(speech_file_path)
@@ -135,7 +149,7 @@ def core(full_execution=False):
         print(f"錯誤：找不到音訊檔案 {speech_file_path}。請先生成題目語音檔。")
         return
 
-    input("按下 Enter 鍵開始播放音訊...")
+    input("➡️  按下 Enter 鍵開始播放音訊...")
     t = threading.Thread(target=audio_thread)
     t.start()
 
@@ -145,7 +159,11 @@ def core(full_execution=False):
         while not exit_flag:
             if not playing:
                 break
-            time.sleep(0.5)
+            time.sleep(0.3)
+        
+
+    print("✅ 音訊播放結束，請按 Enter 繼續。")
+
     return
 
 

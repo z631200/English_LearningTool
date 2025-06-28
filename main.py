@@ -68,6 +68,7 @@ def main():
         return
     elif choice == "0":
         audio_ctrl.core(False)
+        quiz_ctrl.core()
         return
     
 
