@@ -80,7 +80,7 @@ def audio_thread():
         time.sleep(0.5)
     playing = False
     exit_flag = True
-    print("exit_flag 已設置為 True，音訊播放結束。")
+    # print("exit_flag 已設置為 True，音訊播放結束。")
 
 def user_input_thread():
     global user_command, exit_flag
@@ -124,6 +124,7 @@ def handle_commands_thread():
 
 def core(full_execution=True):
     global exit_flag
+    exit_flag = False
 
     if full_execution:
         make_audio()

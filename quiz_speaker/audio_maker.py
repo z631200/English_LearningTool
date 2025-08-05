@@ -47,7 +47,8 @@ def make_audio():
         return
 
     audio_paths = []
-    for i, question in tqdm(enumerate(question_list, start=1), desc="\n🔊 題目語音檔產生中", unit="題", total=len(question_list)):
+    print("🔊 題目語音檔產生中...")
+    for i, question in tqdm(enumerate(question_list, start=1), desc="進度", unit="題", total=len(question_list)):
         question_file_path = os.path.join(OUTPUT_DIR, f"Question_{i}.mp3")
 
         with client.audio.speech.with_streaming_response.create(
