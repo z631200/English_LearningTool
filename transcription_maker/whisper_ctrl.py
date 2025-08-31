@@ -29,9 +29,9 @@ def process_local_audio(audio_path: str):
     print("[3] 開始 Whisper 轉錄...")
     transcribe_with_original_time(sampled_path, segment_offset_map)
 
-def process_youtube_video():
+def process_youtube_video(youtube_url):
     """處理 YouTube 影片"""
-    youtube_url = input("請輸入 YouTube 影片網址：")
+    # youtube_url = input("請輸入 YouTube 影片網址：")
 
     # [1] 下載音訊
     audio_path = download_audio(youtube_url)
@@ -48,6 +48,8 @@ def process_youtube_video():
     # [4] Whisper 轉錄 + 回推原始時間
     print("[3] 開始 Whisper 轉錄...")
     transcribe_with_original_time(sampled_path, segment_offset_map)
+    
+    return True
 
 def delete_files_in_directory():
     extensions = ["*.wav", "*.mp3", "*.txt"]
