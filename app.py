@@ -63,11 +63,16 @@ def on_show_transcript():
     except Exception as e:
         return "", f"讀取失敗：{e}"
 
+async def on_generate_questions(quiz_count: str):
+    try:
+        n = int(quiz_count)
+    except (TypeError, ValueError):
+        return "請輸入整數題數(例如:5)"
+    if n < 1:
+        return "題數需≥1"
 
-
-def on_generate_questions(quiz_count: str):
-    msg = f"已點擊『產生題目』，題數={quiz_count or '（未填）'}（UI-only）。"
-    return msg
+    await response_ctrl.core(n)
+    return f"已產生 {n} 題"
 
 
 def on_make_volume_audio():
@@ -196,7 +201,7 @@ with gr.Blocks(title="ListeningTest — UI-only") as demo:
                 inputs=ans_unlocked,
                 outputs=[answers_view, status_4]
             )
-    gr.Markdown("— 完成（UI-only）—")
+    # gr.Markdown("— 完成（UI-only）—")
 
 if __name__ == "__main__":
     demo.launch()

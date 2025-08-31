@@ -69,11 +69,11 @@ async def generate_question_from_text(text: str, quiz_count: str):
     except Exception as e:
         print(f"API error: {str(e)}")
 
-async def core():
+async def core(quiz_count):
     file_path = os.path.join(OUTPUT_DIR, "transcription.txt")
     content = await read_txt_file(file_path)
     if "Error" not in content and "not found" not in content:
-        quiz_count = input("\n請輸入題數：")
+        # quiz_count = input("\n請輸入題數：")
         await generate_question_from_text(content,quiz_count)
     else:
         print("Error:", content)
