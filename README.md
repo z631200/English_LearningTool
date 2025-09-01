@@ -41,7 +41,7 @@ main/
 ```
 
 ## 套件 (temp)
-pip install dotenv openai pygame pydub yt-dlp  
+pip install dotenv openai pygame pydub yt-dlp gradio
 pip install git+https://github.com/openai/whisper.git
 
 ## reference
