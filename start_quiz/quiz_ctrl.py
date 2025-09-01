@@ -3,10 +3,12 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
+import os
+
 def extract_answer(file_path):
     if not os.path.exists(file_path):
-        print(f"檔案不存在：{file_path}")
-        return None
+        print(f"⛔ 題目檔案不存在：{file_path}")
+        raise FileNotFoundError(f"⛔ 題目檔案不存在")
 
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -14,9 +16,9 @@ def extract_answer(file_path):
             if line.startswith("Answer:"):
                 answer = line.replace("Answer:", "").strip().lower()
                 return answer
-    print("找不到答案")
-    return None
 
+    print("⛔ 找不到答案")
+    return None
 
 def check_user_answer(correct_answer):
     user_input = input("\n請輸入你的答案（格式：C,C,C）：").strip().lower()

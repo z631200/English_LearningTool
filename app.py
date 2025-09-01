@@ -42,9 +42,9 @@ def on_run_transcribe(youtube_url: str):
     delete_files_in_output_file()
     transcribe_done = whisper_ctrl.process_youtube_video(youtube_url)
     if transcribe_done:
-        return "已完成轉錄"
+        return "✅ 已完成轉錄"
     else:
-        return "未完成轉錄"
+        return "❌ 未完成轉錄"
 
 
 def on_show_transcript():
@@ -52,12 +52,12 @@ def on_show_transcript():
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read().strip()
-        status = "已載入轉錄結果"
+        status = "📥 已載入轉錄結果"
         return content, status
     except FileNotFoundError:
-        return "", "找不到檔案"
+        return "", "❌ 找不到檔案"
     except Exception as e:
-        return "", f"讀取失敗：{e}"
+        return "", f"❌ 讀取失敗：{e}"
 
 async def on_generate_questions(quiz_count: str):
     try:
@@ -65,63 +65,70 @@ async def on_generate_questions(quiz_count: str):
     except (TypeError, ValueError):
         return "請輸入整數題數(例如:5)"
     if n < 1:
-        return "題數需≥1"
+        return "❗ 題數需≥1"
 
     await response_ctrl.core(n)
-    return f"已產生 {n} 題"
+    return f"✅ 已產生 {n} 題"
 
 def on_load_volume_audio():
     volume_audio_done = audio_maker.make_volume_audio()
     if volume_audio_done:
         audio_ctrl.UI_load_audio(False)
-        return "已讀取音量測試音檔"
+        return "📥 已讀取音量測試音檔"
     else:
-        return "未生成音量測試音檔"    
+        return "❌ 未生成音量測試音檔"    
 
 def on_load_questions_audio():
     quiz_audio_done = audio_maker.make_audio()
     if quiz_audio_done:
         audio_ctrl.UI_load_audio(True)
-        return "已讀取題目音檔"
+        return "📥 已讀取題目音檔"
     else:
-        return "未生成題目音檔"
+        return "❌ 未生成題目音檔"
 
 def on_play_audio():
-    audio_ctrl.play_audio()
-    return "播放"
+    try:
+        audio_ctrl.play_audio()
+        return "▶️ 播放"
+    except Exception as e:
+        return f"播放時發生錯誤: {str(e)}"
+    
 
 def on_pause_audio():
     audio_ctrl.pause_audio()
-    return "暫停"
+    return "⏸️ 暫停"
 
 def on_stop_audio():
     audio_ctrl.stop_audio()
-    return "停止"
+    return "⏹️ 停止"
 
 def check_answer(user_answer: str, unlocked: bool):
-    if (user_answer or "").strip():
-        file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
-        unlocked = True
-        correct_answer = quiz_ctrl.extract_answer(file_path)
-        if user_answer == correct_answer:
-            return "🥳 答案正確！", gr.update(interactive=True), unlocked
+    try:
+        if (user_answer or "").strip():
+            file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
+            correct_answer = quiz_ctrl.extract_answer(file_path)
+            unlocked = True
+            if user_answer == correct_answer:
+                return "🥳 答案正確！", gr.update(interactive=True), unlocked
+            else:
+                return f"😢 答案錯誤。正確答案是：{correct_answer}", gr.update(interactive=True), unlocked
         else:
-            return f"😢 答案錯誤。正確答案是：{correct_answer}", gr.update(interactive=True), unlocked
-    else:
-        return "請先輸入答案再送出。", gr.update(interactive=False), unlocked
+            return "❗ 請先輸入答案再送出。", gr.update(interactive=False), unlocked
+    except Exception as e:
+        return f"檢查答案時發生錯誤: {str(e)}", gr.update(interactive=False), unlocked
 
 def on_show_answers(unlocked: bool):
     if not unlocked:
-        return "", "尚未解鎖，無法顯示答案。"
+        return "", "❗ 尚未解鎖，無法顯示答案。"
     file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read().strip()
         return content
     except FileNotFoundError:
-        return "", "找不到檔案"
+        return "", "❌ 找不到檔案"
     except Exception as e:
-        return "", f"讀取失敗：{e}"
+        return "", f"❌ 讀取失敗：{e}"
 
 # ====== Gradio interface ======
 with gr.Blocks(title="ListeningTest") as demo:
