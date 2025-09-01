@@ -19,9 +19,9 @@ async def read_txt_file(file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
-        return "quiz_maker: File not found."
+        return "⛔ 題目檔案不存在"
     except Exception as e:
-        return f"quiz_maker: Error reading file: {str(e)}"
+        return f"⛔ 無法讀取題目檔案，原因: {str(e)}"
 
 async def write_to_listening_test_file(content: str):
     try:

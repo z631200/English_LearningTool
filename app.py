@@ -62,36 +62,38 @@ def on_show_transcript():
 async def on_generate_questions(quiz_count: str):
     try:
         n = int(quiz_count)
+        if n < 1 or n > 10:
+            return "❗ 題數需在1~10"        
+        await response_ctrl.core(n)
+        return f"✅ 已產生 {n} 題"
     except (TypeError, ValueError):
-        return "請輸入整數題數(例如:5)"
-    if n < 1:
-        return "❗ 題數需≥1"
+        return "❗ 請輸入整數題數(例如:3)"
+    except Exception as e:
+        return f"❌ 錯誤：{str(e)}"
 
-    await response_ctrl.core(n)
-    return f"✅ 已產生 {n} 題"
 
 def on_load_volume_audio():
-    volume_audio_done = audio_maker.make_volume_audio()
+    volume_audio_done, err_msg = audio_maker.make_volume_audio()
     if volume_audio_done:
         audio_ctrl.UI_load_audio(False)
         return "📥 已讀取音量測試音檔"
     else:
-        return "❌ 未生成音量測試音檔"    
+        return f"❌ 未生成音量測試音檔，原因：{err_msg}"    
 
 def on_load_questions_audio():
-    quiz_audio_done = audio_maker.make_audio()
+    quiz_audio_done, err_msg = audio_maker.make_audio()
     if quiz_audio_done:
         audio_ctrl.UI_load_audio(True)
         return "📥 已讀取題目音檔"
     else:
-        return "❌ 未生成題目音檔"
+        return f"❌ 未生成題目音檔，原因：{err_msg}"
 
 def on_play_audio():
     try:
         audio_ctrl.play_audio()
         return "▶️ 播放"
     except Exception as e:
-        return f"播放時發生錯誤: {str(e)}"
+        return f"⛔ 播放時發生錯誤: {str(e)}"
     
 
 def on_pause_audio():
@@ -115,7 +117,7 @@ def check_answer(user_answer: str, unlocked: bool):
         else:
             return "❗ 請先輸入答案再送出。", gr.update(interactive=False), unlocked
     except Exception as e:
-        return f"檢查答案時發生錯誤: {str(e)}", gr.update(interactive=False), unlocked
+        return f"⛔ 檢查答案時發生錯誤: {str(e)}", gr.update(interactive=False), unlocked
 
 def on_show_answers(unlocked: bool):
     if not unlocked:

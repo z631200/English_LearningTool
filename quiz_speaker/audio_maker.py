@@ -28,10 +28,10 @@ def make_volume_audio():
             response.stream_to_file(volume_test_file_path)
             print("✅ 測試語音檔已完成...")
             print(f"音訊已儲存至 {volume_test_file_path}")
-        return 1
+        return True, None
     except Exception as e:
-        print(e)
-        return 0
+        print(f"❌ 錯誤: {str(e)}")
+        return False, str(e)
 
 def make_audio():
     try:
@@ -44,11 +44,11 @@ def make_audio():
         question_list = split_question("\n".join(filtered_lines))
 
     except FileNotFoundError:
-        print("找不到 ListeningTest.txt 檔案。")
-        return 0
+        print("找不到 ListeningTest.txt 檔案")
+        return False, "找不到題目文字檔案"
     except Exception as e:
-        print(f"讀取 ListeningTest.txt 發生錯誤: {str(e)}")
-        return 0
+        print(f"生成語音檔案發生錯誤: {str(e)}")
+        return False, str(e)
 
     audio_paths = []
     print("🔊 題目語音檔產生中...")
@@ -70,7 +70,7 @@ def make_audio():
     print("✅ 所有題目語音檔產生完成！")
     merge_audio(audio_paths)
 
-    return 1
+    return True, None
 
 
 def split_question(input_text):
