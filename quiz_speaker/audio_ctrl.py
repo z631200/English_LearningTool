@@ -41,7 +41,6 @@ def _is_busy() -> bool:
 # 對外 API：載入 / 播放控制（單一播放緒）
 # ─────────────────────────────────────────
 def load_audio(file_path: str):
-    """只載入，不播放。"""
     global _loaded, _loaded_path
     _ensure_mixer()
     if not os.path.exists(file_path):
@@ -51,16 +50,10 @@ def load_audio(file_path: str):
     _loaded_path = file_path
 
 def UI_load_audio(is_quiz_audio: bool):
-    """只載入（UI 友善）。"""
     path = speech_file_path if is_quiz_audio else volume_test_file_path
     load_audio(path)
 
 def _play_loop(start_new: bool):
-    """
-    單一播放緒：
-    - start_new=True → 從頭播放
-    - start_new=False → 若暫停就繼續，否則保持現況（若未播放則從頭）
-    """
     # 啟動前清除停止事件
     _stop_ev.clear()
 
@@ -97,14 +90,8 @@ def _play_loop(start_new: bool):
     _stop_ev.clear()
 
 def play_audio(restart: bool = False):
-    """
-    合併原 unpause 行為：
-    - 若目前「暫停中」且 restart=False → 直接繼續播放
-    - 其他情況 → 從頭播放
-    ◉ 僅保留一條播放緒：若緒已存在且活著，就僅調整狀態（暫停/繼續），不重啟緒。
-    """
     if not _loaded:
-        raise RuntimeError("尚未載入音訊，請先呼叫 load_audio()/UI_load_audio()")
+        raise RuntimeError("未載入音訊")
 
     _ensure_mixer()
     with _lock:
