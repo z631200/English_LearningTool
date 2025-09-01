@@ -8,6 +8,7 @@ import glob
 from transcription_maker import whisper_ctrl
 from quiz_maker import response_ctrl
 from quiz_speaker import audio_ctrl
+from quiz_speaker import audio_maker
 from start_quiz import quiz_ctrl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -75,45 +76,83 @@ async def on_generate_questions(quiz_count: str):
     return f"已產生 {n} 題"
 
 
-def on_make_volume_audio():
-    return "已點擊『音量測試音檔』（UI-only）。"
+def on_load_volume_audio():
+    volume_audio_done = audio_maker.make_volume_audio()
+    if volume_audio_done:
+        audio_ctrl.UI_load_audio(False)
+        return "已讀取音量測試音檔"
+    else:
+        return "未生成音量測試音檔"
+    
 
-
-def on_make_questions_audio():
-    return "已點擊『題目語音』（UI-only）。"
+def on_load_questions_audio():
+    quiz_audio_done = audio_maker.make_audio()
+    if quiz_audio_done:
+        audio_ctrl.UI_load_audio(True)
+        return "已讀取題目音檔"
+    else:
+        return "未生成題目音檔"
 
 
 def on_play_audio():
-    return "播放（UI-only）。"
+    audio_ctrl.play_audio()
+    return "播放"
 
 
 def on_pause_audio():
-    return "暫停（UI-only）。"
+    audio_ctrl.pause_audio()
+    return "暫停"
 
 
 def on_stop_audio():
-    return "停止（UI-only）。"
+    audio_ctrl.stop_audio()
+    return "停止"
 
-
-def unlock_show_answers(user_answer: str, unlocked: bool):
-    """送出答案後，若有輸入內容，解鎖『顯示答案』按鈕。"""
+def check_answer(user_answer: str, unlocked: bool):
     if (user_answer or "").strip():
+        file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
         unlocked = True
-        return "已送出作答；已解鎖『顯示答案』。", gr.update(interactive=True), unlocked
+        correct_answer = quiz_ctrl.extract_answer(file_path)
+        if user_answer == correct_answer:
+            return "🥳 答案正確！", gr.update(interactive=True), unlocked
+        else:
+            return f"😢 答案錯誤。正確答案是：{correct_answer}", gr.update(interactive=True), unlocked
     else:
         return "請先輸入答案再送出。", gr.update(interactive=False), unlocked
+
+# def unlock_show_answers(user_answer: str, unlocked: bool):
+#     """送出答案後，若有輸入內容，解鎖『顯示答案』按鈕。"""
+#     if (user_answer or "").strip():
+#         unlocked = True
+#         return "已送出作答；已解鎖『顯示答案』。", gr.update(interactive=True), unlocked
+#     else:
+#         return "請先輸入答案再送出。", gr.update(interactive=False), unlocked
 
 def on_show_answers(unlocked: bool):
     if not unlocked:
         return "", "尚未解鎖，無法顯示答案。"
-    answers = "（UI-only）這裡會顯示正確答案，例如：A,B,C,..."
-    status = "已點擊『顯示答案』（UI-only）。"
-    return answers, status
+    file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+        return content
+    except FileNotFoundError:
+        return "", "找不到檔案"
+    except Exception as e:
+        return "", f"讀取失敗：{e}"
+
+# def on_show_answers(unlocked: bool):
+#     if not unlocked:
+#         return "", "尚未解鎖，無法顯示答案。"
+#     answers = "（UI-only）這裡會顯示正確答案，例如：A,B,C,..."
+#     status = "已點擊『顯示答案』（UI-only）。"
+#     return answers, status
 
 
 # ========= Gradio 介面 =========
-with gr.Blocks(title="ListeningTest — UI-only") as demo:
-    gr.Markdown("## 🎧 ListeningTest — 介面雛形（UI-only）\n> 本版本僅保留 UI；所有按鈕僅更新『狀態』或顯示占位文字，尚未串接後端功能。")
+with gr.Blocks(title="ListeningTest") as demo:
+    gr.Markdown("## 🎧 ListeningTest\n> " \
+    "每頁的步驟完成後才換下頁")
 
     with gr.Tabs():
         # ================= 第一頁：YouTube 轉錄 =================
@@ -142,35 +181,17 @@ with gr.Blocks(title="ListeningTest — UI-only") as demo:
             is_playing_question = gr.State(False)
 
             with gr.Row():
-                vol_btn = gr.Button("播放音量測試", variant="huggingface")
-                make_audio_btn = gr.Button("播放題目語音", variant="primary")
+                make_vol_btn = gr.Button("產生音量測試", variant="huggingface") 
+                make_audio_btn = gr.Button("產生題目語音", variant="primary")
             with gr.Row():
                 play_btn = gr.Button("播放")
                 pause_btn = gr.Button("暫停")
                 stop_btn = gr.Button("中止", variant="stop")
             status_3 = gr.Textbox(label="狀態", interactive=False)
 
-            # 當播放音量測試時，鎖定題目語音按鈕
-            def on_make_volume_audio_locked():
-                return "已點擊『音量測試音檔』（UI-only）。", \
-                    gr.update(interactive=False), gr.update(interactive=True)
-
-            # 當播放題目語音時，鎖定音量測試按鈕
-            def on_make_questions_audio_locked():
-                return "已點擊『題目語音』（UI-only）。", \
-                    gr.update(interactive=False), gr.update(interactive=True)
-
             # 綁定事件
-            vol_btn.click(
-                fn=on_make_volume_audio_locked,
-                inputs=None,
-                outputs=[status_3, make_audio_btn, vol_btn]
-            )
-            make_audio_btn.click(
-                fn=on_make_questions_audio_locked,
-                inputs=None,
-                outputs=[status_3, vol_btn, make_audio_btn]
-            )
+            make_vol_btn.click(fn=on_load_volume_audio,inputs=None,outputs=status_3)
+            make_audio_btn.click(fn=on_load_questions_audio,inputs=None,outputs=status_3)
 
             play_btn.click(fn=on_play_audio, inputs=None, outputs=status_3)
             pause_btn.click(fn=on_pause_audio, inputs=None, outputs=status_3)
@@ -191,7 +212,7 @@ with gr.Blocks(title="ListeningTest — UI-only") as demo:
 
             # 送出答案 → 若有填寫，解鎖『顯示答案』按鈕
             submit_btn.click(
-                fn=unlock_show_answers,
+                fn=check_answer,
                 inputs=[user_answer, ans_unlocked],
                 outputs=[status_4, show_ans_btn, ans_unlocked]
             )
@@ -199,7 +220,7 @@ with gr.Blocks(title="ListeningTest — UI-only") as demo:
             show_ans_btn.click(
                 fn=on_show_answers,
                 inputs=ans_unlocked,
-                outputs=[answers_view, status_4]
+                outputs=[answers_view]
             )
     # gr.Markdown("— 完成（UI-only）—")
 
