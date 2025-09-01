@@ -14,7 +14,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
 async def read_txt_file(file_path: str) -> str:
-    """非同步讀取 txt 檔案內容"""
+    "read transcription"
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
@@ -33,7 +33,6 @@ async def write_to_listening_test_file(content: str):
         print(f"寫入檔案時發生錯誤: {str(e)}")
 
 async def generate_question_from_text(text: str, quiz_count: str):
-    """使用 Chat Completions API 根據文字產生多題英文題目"""
     system_prompt = "You are an assistant that generates English quiz questions based on a video clip used in English listening tests."
     user_prompt = (
         f"Based on the following transcript of a video used in an English listening comprehension test, "

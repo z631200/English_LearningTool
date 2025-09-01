@@ -38,9 +38,9 @@ def make_audio():
         with open(input_file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        # 過濾掉 Answer 行
+        # filter Answer 
         filtered_lines = [line.strip() for line in lines if not line.strip().startswith("Answer:")]
-        # 切割題目
+        # split quiz
         question_list = split_question("\n".join(filtered_lines))
 
     except FileNotFoundError:
@@ -74,9 +74,8 @@ def make_audio():
 
 
 def split_question(input_text):
-    # 使用 "Question X:" 切割
+    # split by "Question X:"
     question_splits = re.split(r'(Question \d+:)', input_text)    
-    # 合併題號與其內容，排除空字串
     question_list = []
     for i in range(1, len(question_splits), 2):
         question = question_splits[i] + question_splits[i + 1]
@@ -97,7 +96,6 @@ def merge_audio(audio_paths, delay_seconds=3):
     combined.export(output_path, format="mp3")
     print(f"✅ 合併完成，儲存於: {output_path}")
 
-    # 刪除 Question_i.mp3 檔案
     for path in audio_paths:
         try:
             os.remove(path)
