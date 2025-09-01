@@ -18,16 +18,20 @@ input_file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
 def make_volume_audio():
     print("\n⏳ 正在產生音量測試語音檔...")
     volume_test_file_path = os.path.join(OUTPUT_DIR, "VolumeTest.mp3")
-    with client.audio.speech.with_streaming_response.create(
-        model="gpt-4o-mini-tts",
-        voice="coral",
-        input="Please adjust the volume. This is a test audio file.",
-        speed=0.8,
-    ) as response:
-        response.stream_to_file(volume_test_file_path)
-        print("✅ 測試語音檔已完成...")
-        print(f"音訊已儲存至 {volume_test_file_path}")
-
+    try:
+        with client.audio.speech.with_streaming_response.create(
+            model="gpt-4o-mini-tts",
+            voice="coral",
+            input="Please adjust the volume. This is a test audio file.",
+            speed=0.8,
+        ) as response:
+            response.stream_to_file(volume_test_file_path)
+            print("✅ 測試語音檔已完成...")
+            print(f"音訊已儲存至 {volume_test_file_path}")
+        return 1
+    except Exception as e:
+        print(e)
+        return 0
 
 def make_audio():
     try:
@@ -41,10 +45,10 @@ def make_audio():
 
     except FileNotFoundError:
         print("找不到 ListeningTest.txt 檔案。")
-        return
+        return 0
     except Exception as e:
         print(f"讀取 ListeningTest.txt 發生錯誤: {str(e)}")
-        return
+        return 0
 
     audio_paths = []
     print("🔊 題目語音檔產生中...")
@@ -65,6 +69,8 @@ def make_audio():
 
     print("✅ 所有題目語音檔產生完成！")
     merge_audio(audio_paths)
+
+    return 1
 
 
 def split_question(input_text):
