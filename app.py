@@ -1,7 +1,3 @@
-# app.py（UI-only 版本）
-# 只保留 Gradio 介面元素，無後端流程呼叫；所有按鈕僅更新「狀態」或顯示占位文字。
-# 執行：python app.py
-
 import gradio as gr
 import os
 import glob
@@ -39,8 +35,7 @@ def delete_files_in_output_file(full_execution = False):
     else:
         print("📂 已重置output_file資料夾")
 
-# ========= 占位用的 Callback（不做真正運算） =========
-
+# ====== Callback ======
 def on_run_transcribe(youtube_url: str):
     if not youtube_url:
         return "請先輸入 YouTube 連結。"
@@ -75,15 +70,13 @@ async def on_generate_questions(quiz_count: str):
     await response_ctrl.core(n)
     return f"已產生 {n} 題"
 
-
 def on_load_volume_audio():
     volume_audio_done = audio_maker.make_volume_audio()
     if volume_audio_done:
         audio_ctrl.UI_load_audio(False)
         return "已讀取音量測試音檔"
     else:
-        return "未生成音量測試音檔"
-    
+        return "未生成音量測試音檔"    
 
 def on_load_questions_audio():
     quiz_audio_done = audio_maker.make_audio()
@@ -93,16 +86,13 @@ def on_load_questions_audio():
     else:
         return "未生成題目音檔"
 
-
 def on_play_audio():
     audio_ctrl.play_audio()
     return "播放"
 
-
 def on_pause_audio():
     audio_ctrl.pause_audio()
     return "暫停"
-
 
 def on_stop_audio():
     audio_ctrl.stop_audio()
@@ -120,14 +110,6 @@ def check_answer(user_answer: str, unlocked: bool):
     else:
         return "請先輸入答案再送出。", gr.update(interactive=False), unlocked
 
-# def unlock_show_answers(user_answer: str, unlocked: bool):
-#     """送出答案後，若有輸入內容，解鎖『顯示答案』按鈕。"""
-#     if (user_answer or "").strip():
-#         unlocked = True
-#         return "已送出作答；已解鎖『顯示答案』。", gr.update(interactive=True), unlocked
-#     else:
-#         return "請先輸入答案再送出。", gr.update(interactive=False), unlocked
-
 def on_show_answers(unlocked: bool):
     if not unlocked:
         return "", "尚未解鎖，無法顯示答案。"
@@ -141,21 +123,13 @@ def on_show_answers(unlocked: bool):
     except Exception as e:
         return "", f"讀取失敗：{e}"
 
-# def on_show_answers(unlocked: bool):
-#     if not unlocked:
-#         return "", "尚未解鎖，無法顯示答案。"
-#     answers = "（UI-only）這裡會顯示正確答案，例如：A,B,C,..."
-#     status = "已點擊『顯示答案』（UI-only）。"
-#     return answers, status
-
-
-# ========= Gradio 介面 =========
+# ====== Gradio interface ======
 with gr.Blocks(title="ListeningTest") as demo:
     gr.Markdown("## 🎧 ListeningTest\n> " \
     "每頁的步驟完成後才換下頁")
 
     with gr.Tabs():
-        # ================= 第一頁：YouTube 轉錄 =================
+        # ====== p1. YouTube transcribe ======
         with gr.Tab("YouTube 轉錄"):
             youtube_url = gr.Textbox(label="YouTube 連結", placeholder="貼上 YouTube 連結")
             with gr.Row():
@@ -167,7 +141,7 @@ with gr.Blocks(title="ListeningTest") as demo:
             run_btn.click(fn=on_run_transcribe, inputs=youtube_url, outputs=status_1)
             show_btn.click(fn=on_show_transcript, inputs=None, outputs=[transcript_box, status_1])
 
-        # ================= 第二頁：產生題目 =================
+        # ====== p2. make quiz ======
         with gr.Tab("產生題目"):
             quiz_count = gr.Textbox(label="題數", value="", placeholder="輸入要產生的題數")
             gen_btn = gr.Button("產生題目", variant="primary")
@@ -175,7 +149,7 @@ with gr.Blocks(title="ListeningTest") as demo:
 
             gen_btn.click(fn=on_generate_questions, inputs=quiz_count, outputs=status_2)
 
-        # ========= 第三頁：題目語音 =========
+        # ====== p3. make audio ======
         with gr.Tab("題目語音"):
             is_playing_volume = gr.State(False)
             is_playing_question = gr.State(False)
@@ -189,40 +163,32 @@ with gr.Blocks(title="ListeningTest") as demo:
                 stop_btn = gr.Button("中止", variant="stop")
             status_3 = gr.Textbox(label="狀態", interactive=False)
 
-            # 綁定事件
             make_vol_btn.click(fn=on_load_volume_audio,inputs=None,outputs=status_3)
             make_audio_btn.click(fn=on_load_questions_audio,inputs=None,outputs=status_3)
-
             play_btn.click(fn=on_play_audio, inputs=None, outputs=status_3)
             pause_btn.click(fn=on_pause_audio, inputs=None, outputs=status_3)
             stop_btn.click(fn=on_stop_audio, inputs=None, outputs=status_3)
 
-        # ================= 第四頁：檢視與測驗 =================
+        # ====== p4. start quiz ======
         with gr.Tab("檢視與測驗"):
-            ans_unlocked = gr.State(False) # ✅ 是否可顯示答案
-
-
+            ans_unlocked = gr.State(False) # unlock view btn
             user_answer = gr.Textbox(label="輸入答案", placeholder="例如：A,B,C,D,E")
             with gr.Row():
-                submit_btn = gr.Button("送出答案")
-                show_ans_btn = gr.Button("顯示答案", interactive=False) # ✅ 初始隱藏
+                submit_btn = gr.Button("送出答案", variant="primary")
+                show_ans_btn = gr.Button("顯示答案", interactive=False) # unable first
             status_4 = gr.Textbox(label="狀態", interactive=False)
             answers_view = gr.Textbox(label="檢視答案", lines=12)
 
-
-            # 送出答案 → 若有填寫，解鎖『顯示答案』按鈕
             submit_btn.click(
                 fn=check_answer,
                 inputs=[user_answer, ans_unlocked],
                 outputs=[status_4, show_ans_btn, ans_unlocked]
             )
-            # 顯示答案（需 ans_unlocked=True）
             show_ans_btn.click(
                 fn=on_show_answers,
                 inputs=ans_unlocked,
                 outputs=[answers_view]
             )
-    # gr.Markdown("— 完成（UI-only）—")
 
 if __name__ == "__main__":
     demo.launch()

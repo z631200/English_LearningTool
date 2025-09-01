@@ -20,7 +20,7 @@ Application for generating and conducting listening tests baesd on videos
 ## 專案結構
 ```
 main/
-├── main.py
+├── app.py
 ├── config.py
 ├── output_file/         # 儲存輸出檔案
 ├── transcription_maker  # 逐字稿生成模組
