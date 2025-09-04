@@ -3,6 +3,7 @@ import os
 import glob
 from transcription_maker import whisper_ctrl
 from quiz_maker import response_ctrl
+from quiz_speaker import audio_ctrl
 from quiz_speaker import audio_maker
 from start_quiz import quiz_ctrl
 
@@ -12,13 +13,7 @@ TRANSCRIP_TOOL_DIR = os.path.join(BASE_DIR, "transcription_maker/tool")
 
 os.environ["PATH"] = f"{TRANSCRIP_TOOL_DIR};{os.environ['PATH']}"
 
-# 預設輸出檔名（與專案一致）
-VOLUME_AUDIO = os.path.join(OUTPUT_DIR, "VolumeTest.mp3")
-QUESTION_AUDIO = os.path.join(OUTPUT_DIR, "ListeningTest.mp3")
-TRANSCRIPT_TXT = os.path.join(OUTPUT_DIR, "transcription.txt")
-QUIZ_TXT = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
-
-def delete_files_in_output_file(full_execution=False):
+def delete_files_in_output_file(full_execution = False):
     extensions = ["*.wav", "*.mp3", "*.txt"]
     deleted_files = []
     for ext in extensions:
@@ -51,9 +46,11 @@ def on_run_transcribe(youtube_url: str):
     else:
         return "❌ 未完成轉錄"
 
+
 def on_show_transcript():
+    file_path = os.path.join(OUTPUT_DIR, "transcription.txt")
     try:
-        with open(TRANSCRIPT_TXT, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read().strip()
         status = "📥 已載入轉錄結果"
         return content, status
@@ -66,7 +63,7 @@ async def on_generate_questions(quiz_count: str):
     try:
         n = int(quiz_count)
         if n < 1 or n > 10:
-            return "❗ 題數需在1~10"
+            return "❗ 題數需在1~10"        
         await response_ctrl.core(n)
         return f"✅ 已產生 {n} 題"
     except (TypeError, ValueError):
@@ -74,28 +71,44 @@ async def on_generate_questions(quiz_count: str):
     except Exception as e:
         return f"❌ 錯誤：{str(e)}"
 
+
 def on_load_volume_audio():
-    gen_audio_done, err_msg = audio_maker.make_volume_audio()
-    if gen_audio_done and os.path.exists(VOLUME_AUDIO):
-        return gr.update(value=VOLUME_AUDIO), "📥 已讀取音量測試音檔"
-    elif gen_audio_done:
-        return gr.update(value=None), "⚠️ 已生成但找不到音檔路徑"
+    volume_audio_done, err_msg = audio_maker.make_volume_audio()
+    if volume_audio_done:
+        audio_ctrl.UI_load_audio(False)
+        return "📥 已讀取音量測試音檔"
     else:
-        return gr.update(value=None), f"❌ 未生成音量測試音檔，原因：{err_msg}"
+        return f"❌ 未生成音量測試音檔，原因：{err_msg}"    
 
 def on_load_questions_audio():
-    gen_audio_done, err_msg = audio_maker.make_audio()
-    if gen_audio_done and os.path.exists(QUESTION_AUDIO):
-        return gr.update(value=QUESTION_AUDIO), "📥 已讀取題目音檔"
-    elif gen_audio_done:
-        return gr.update(value=None), "⚠️ 已生成但找不到音檔路徑"
+    quiz_audio_done, err_msg = audio_maker.make_audio()
+    if quiz_audio_done:
+        audio_ctrl.UI_load_audio(True)
+        return "📥 已讀取題目音檔"
     else:
-        return gr.update(value=None), f"❌ 未生成題目音檔，原因：{err_msg}"
+        return f"❌ 未生成題目音檔，原因：{err_msg}"
+
+def on_play_audio():
+    try:
+        audio_ctrl.play_audio()
+        return "▶️ 播放"
+    except Exception as e:
+        return f"⛔ 播放時發生錯誤: {str(e)}"
+    
+
+def on_pause_audio():
+    audio_ctrl.pause_audio()
+    return "⏸️ 暫停"
+
+def on_stop_audio():
+    audio_ctrl.stop_audio()
+    return "⏹️ 停止"
 
 def check_answer(user_answer: str, unlocked: bool):
     try:
         if (user_answer or "").strip():
-            correct_answer = quiz_ctrl.extract_answer(QUIZ_TXT)
+            file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
+            correct_answer = quiz_ctrl.extract_answer(file_path)
             unlocked = True
             if user_answer == correct_answer:
                 return "🥳 答案正確！", gr.update(interactive=True), unlocked
@@ -108,18 +121,21 @@ def check_answer(user_answer: str, unlocked: bool):
 
 def on_show_answers(unlocked: bool):
     if not unlocked:
-        return "❗ 尚未解鎖，無法顯示答案。"
+        return "", "❗ 尚未解鎖，無法顯示答案。"
+    file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
     try:
-        with open(QUIZ_TXT, "r", encoding="utf-8") as f:
-            return f.read().strip()
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+        return content
     except FileNotFoundError:
-        return "❌ 找不到檔案"
+        return "", "❌ 找不到檔案"
     except Exception as e:
-        return f"❌ 讀取失敗：{e}"
+        return "", f"❌ 讀取失敗：{e}"
 
 # ====== Gradio interface ======
 with gr.Blocks(title="ListeningTest") as demo:
-    gr.Markdown("## 🎧 ListeningTest\n> 每頁的步驟完成後才換下頁")
+    gr.Markdown("## 🎧 ListeningTest\n> " \
+    "每頁的步驟完成後才換下頁")
 
     with gr.Tabs():
         # ====== p1. YouTube transcribe ======
@@ -142,27 +158,33 @@ with gr.Blocks(title="ListeningTest") as demo:
 
             gen_btn.click(fn=on_generate_questions, inputs=quiz_count, outputs=status_2)
 
-        # ====== p3. make audio (用 gr.Audio 播放) ======
+        # ====== p3. make audio ======
         with gr.Tab("題目語音"):
+            is_playing_volume = gr.State(False)
+            is_playing_question = gr.State(False)
+
             with gr.Row():
-                make_vol_btn = gr.Button("產生音量測試", variant="huggingface")
+                make_vol_btn = gr.Button("產生音量測試", variant="huggingface") 
                 make_audio_btn = gr.Button("產生題目語音", variant="primary")
-            # 兩個獨立的音訊播放器：直接塞「檔案路徑」就能播放
-            vol_audio = gr.Audio(label="音量測試播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
-            quiz_audio = gr.Audio(label="題目語音播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
+            with gr.Row():
+                play_btn = gr.Button("播放")
+                pause_btn = gr.Button("暫停")
+                stop_btn = gr.Button("中止", variant="stop")
             status_3 = gr.Textbox(label="狀態", interactive=False)
 
-            # 生成後 → 回傳 (Audio.update(value=檔案路徑), 狀態)
-            make_vol_btn.click(fn=on_load_volume_audio, inputs=None, outputs=[vol_audio, status_3])
-            make_audio_btn.click(fn=on_load_questions_audio, inputs=None, outputs=[quiz_audio, status_3])
+            make_vol_btn.click(fn=on_load_volume_audio,inputs=None,outputs=status_3)
+            make_audio_btn.click(fn=on_load_questions_audio,inputs=None,outputs=status_3)
+            play_btn.click(fn=on_play_audio, inputs=None, outputs=status_3)
+            pause_btn.click(fn=on_pause_audio, inputs=None, outputs=status_3)
+            stop_btn.click(fn=on_stop_audio, inputs=None, outputs=status_3)
 
         # ====== p4. start quiz ======
         with gr.Tab("檢視與測驗"):
-            ans_unlocked = gr.State(False)  # unlock view btn
+            ans_unlocked = gr.State(False) # unlock view btn
             user_answer = gr.Textbox(label="輸入答案", placeholder="例如：A,B,C,D,E")
             with gr.Row():
                 submit_btn = gr.Button("送出答案", variant="primary")
-                show_ans_btn = gr.Button("顯示答案", interactive=False)  # unable first
+                show_ans_btn = gr.Button("顯示答案", interactive=False) # unable first
             status_4 = gr.Textbox(label="狀態", interactive=False)
             answers_view = gr.Textbox(label="檢視答案", lines=12)
 
@@ -180,6 +202,8 @@ with gr.Blocks(title="ListeningTest") as demo:
 if __name__ == "__main__":
     demo.launch(
         share=True,
-        auth=("1c5", "203"),
+        auth=("203", "203"),
         auth_message="需要帳密才能使用"
     )
+
+
