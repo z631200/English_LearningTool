@@ -42,11 +42,13 @@ ENV/
 *.vtt
 *.json
 
+
 # 日誌
 *.log
 
 # 本地設定
 config_local.py
+*.pem
 
 # 備份
 backup.py
