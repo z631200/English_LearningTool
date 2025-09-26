@@ -97,7 +97,7 @@ def check_answer(user_answer: str, unlocked: bool):
         if (user_answer or "").strip():
             correct_answer = quiz_ctrl.extract_answer(QUIZ_TXT)
             unlocked = True
-            if user_answer == correct_answer:
+            if user_answer.lower() == correct_answer:
                 return "🥳 答案正確！", gr.update(interactive=True), unlocked
             else:
                 return f"😢 答案錯誤。正確答案是：{correct_answer}", gr.update(interactive=True), unlocked
