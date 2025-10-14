@@ -39,7 +39,7 @@ def show_quiz(file_path):
 
 
 def core():
-    file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
+    file_path = os.path.join(OUTPUT_DIR, "NormalTest.txt")
     correct_answer = extract_answer(file_path)
 
     if correct_answer:

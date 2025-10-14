@@ -117,69 +117,160 @@ def on_show_answers(unlocked: bool):
     except Exception as e:
         return f"❌ 讀取失敗：{e}"
 
-# ====== Gradio interface ======
-with gr.Blocks(title="ListeningTest") as demo:
+# ====== Gradio interface（加入分類：聽力測驗／文字測驗） ======
+with gr.Blocks(title="ListeningTest", theme=gr.themes.Soft()) as demo:
     gr.Markdown("## 🎧 ListeningTest\n> 每頁的步驟完成後才換下頁")
 
+    # 最高層：兩大分類
     with gr.Tabs():
-        # ====== p1. YouTube transcribe ======
-        with gr.Tab("YouTube 轉錄"):
-            youtube_url = gr.Textbox(label="YouTube 連結", placeholder="貼上 YouTube 連結")
-            with gr.Row():
-                run_btn = gr.Button("執行轉錄", variant="primary")
-                show_btn = gr.Button("顯示轉錄結果")
-            status_1 = gr.Textbox(label="狀態", interactive=False)
-            transcript_box = gr.Textbox(label="轉錄結果", lines=18)
+        # ====== 分類一：聽力測驗（包含原 p1 ~ p4） ======
+        with gr.Tab("聽力測驗"):
+            with gr.Tabs():
+                # p1. YouTube 轉錄
+                with gr.Tab("YouTube 轉錄"):
+                    youtube_url = gr.Textbox(label="YouTube 連結", placeholder="貼上 YouTube 連結")
+                    with gr.Row():
+                        run_btn = gr.Button("執行轉錄", variant="primary")
+                        show_btn = gr.Button("顯示轉錄結果")
+                    status_1 = gr.Textbox(label="狀態", interactive=False)
+                    transcript_box = gr.Textbox(label="轉錄結果", lines=18)
 
-            run_btn.click(fn=on_run_transcribe, inputs=youtube_url, outputs=status_1)
-            show_btn.click(fn=on_show_transcript, inputs=None, outputs=[transcript_box, status_1])
+                    run_btn.click(fn=on_run_transcribe, inputs=youtube_url, outputs=status_1)
+                    show_btn.click(fn=on_show_transcript, inputs=None, outputs=[transcript_box, status_1])
 
-        # ====== p2. make quiz ======
-        with gr.Tab("產生題目"):
-            quiz_count = gr.Textbox(label="題數", value="", placeholder="輸入要產生的題數")
-            gen_btn = gr.Button("產生題目", variant="primary")
-            status_2 = gr.Textbox(label="狀態", interactive=False)
+                # p2. 產生題目（聽力）
+                with gr.Tab("產生題目"):
+                    quiz_count = gr.Textbox(label="題數", value="", placeholder="輸入要產生的題數")
+                    gen_btn = gr.Button("產生題目", variant="primary")
+                    status_2 = gr.Textbox(label="狀態", interactive=False)
 
-            gen_btn.click(fn=on_generate_questions, inputs=quiz_count, outputs=status_2)
+                    gen_btn.click(fn=on_generate_questions, inputs=quiz_count, outputs=status_2)
 
-        # ====== p3. make audio (用 gr.Audio 播放) ======
-        with gr.Tab("題目語音"):
-            with gr.Row():
-                make_vol_btn = gr.Button("產生音量測試", variant="huggingface")
-                make_audio_btn = gr.Button("產生題目語音", variant="primary")
-            # 兩個獨立的音訊播放器：直接塞「檔案路徑」就能播放
-            vol_audio = gr.Audio(label="音量測試播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
-            quiz_audio = gr.Audio(label="題目語音播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
-            status_3 = gr.Textbox(label="狀態", interactive=False)
+                # p3. 題目語音（聽力）
+                with gr.Tab("題目語音"):
+                    with gr.Row():
+                        make_vol_btn = gr.Button("產生音量測試", variant="huggingface")
+                        make_audio_btn = gr.Button("產生題目語音", variant="primary")
+                    vol_audio = gr.Audio(label="音量測試播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
+                    quiz_audio = gr.Audio(label="題目語音播放器", value=None, interactive=False, autoplay=False, show_download_button=True)
+                    status_3 = gr.Textbox(label="狀態", interactive=False)
 
-            # 生成後 → 回傳 (Audio.update(value=檔案路徑), 狀態)
-            make_vol_btn.click(fn=on_load_volume_audio, inputs=None, outputs=[vol_audio, status_3])
-            make_audio_btn.click(fn=on_load_questions_audio, inputs=None, outputs=[quiz_audio, status_3])
+                    make_vol_btn.click(fn=on_load_volume_audio, inputs=None, outputs=[vol_audio, status_3])
+                    make_audio_btn.click(fn=on_load_questions_audio, inputs=None, outputs=[quiz_audio, status_3])
 
-        # ====== p4. start quiz ======
-        with gr.Tab("檢視與測驗"):
-            ans_unlocked = gr.State(False)  # unlock view btn
-            user_answer = gr.Textbox(label="輸入答案", placeholder="例如：A,B,C,D,E")
-            with gr.Row():
-                submit_btn = gr.Button("送出答案", variant="primary")
-                show_ans_btn = gr.Button("顯示答案", interactive=False)  # unable first
-            status_4 = gr.Textbox(label="狀態", interactive=False)
-            answers_view = gr.Textbox(label="檢視答案", lines=12)
+                # p4. 檢視與測驗（聽力）
+                with gr.Tab("檢視與測驗"):
+                    ans_unlocked = gr.State(False)  # unlock view btn
+                    user_answer = gr.Textbox(label="輸入答案", placeholder="例如：A,B,C,D,E")
+                    with gr.Row():
+                        submit_btn = gr.Button("送出答案", variant="primary")
+                        show_ans_btn = gr.Button("顯示答案", interactive=False)  # unable first
+                    status_4 = gr.Textbox(label="狀態", interactive=False)
+                    answers_view = gr.Textbox(label="檢視答案", lines=12)
 
-            submit_btn.click(
-                fn=check_answer,
-                inputs=[user_answer, ans_unlocked],
-                outputs=[status_4, show_ans_btn, ans_unlocked]
-            )
-            show_ans_btn.click(
-                fn=on_show_answers,
-                inputs=ans_unlocked,
-                outputs=[answers_view]
-            )
+                    submit_btn.click(
+                        fn=check_answer,
+                        inputs=[user_answer, ans_unlocked],
+                        outputs=[status_4, show_ans_btn, ans_unlocked]
+                    )
+                    show_ans_btn.click(
+                        fn=on_show_answers,
+                        inputs=ans_unlocked,
+                        outputs=[answers_view]
+                    )
+
+        # ====== 分類二：文字測驗 ======
+        with gr.Tab("文字測驗"):
+            with gr.Tabs():
+                # ====== 新增：獨立的「教材 / 檔案管理」頁籤（頁面） ======
+                with gr.Tab("教材 / 檔案管理"):
+                    with gr.Row():
+                        file_upload = gr.File(label="上傳教材檔案", file_count="multiple", type="filepath")
+                    status_text_files = gr.Textbox(label="狀態", interactive=False)
+                    with gr.Row():
+                        # upload_btn = gr.Button("上傳檔案", variant="secondary")
+                        clear_btn = gr.Button("刪除全部上傳檔案", variant="stop")
+
+                    # === 事件綁定（之後接上你的函式）===
+                    # upload_btn.click(
+                    #     fn=on_upload_files,        # 你的上傳處理函式
+                    #     inputs=file_upload,
+                    #     outputs=status_text_files
+                    # )
+                    # clear_btn.click(
+                    #     fn=on_clear_all_files,     # 你的清空處理函式
+                    #     outputs=status_text_files
+                    # )
+
+                with gr.Tab("產生題目"):
+                    quiz_count_text = gr.Textbox(
+                        label="題數", value="", placeholder="輸入要產生的題數"
+                    )
+
+                    # ✅ 新增：補充 prompt（只改 UI）
+                    extra_prompt_text = gr.Textbox(
+                        label="補充prompt",
+                        placeholder="可選：補充出題說明、限制或語氣（例如：側重軟體工程術語、限制只出單選題）",
+                        lines=3
+                    )
+
+                    # 顯示目前狀態
+                    status_text_gen = gr.Textbox(label="狀態", interactive=False)
+
+                    # 產生題目按鈕
+                    gen_btn_text = gr.Button("產生題目", variant="primary")
+
+                    # === 事件綁定（之後接上你的函式）===
+                    # gen_btn_text.click(
+                    #     fn=on_generate_questions,
+                    #     inputs=[quiz_count_text, extra_prompt_text],
+                    #     outputs=status_text_gen
+                    # )
+
+                # ✅ t2. 檢視與測驗（文字）
+                with gr.Tab("檢視與測驗"):
+                    ans_unlocked_text = gr.State(False)
+
+                    # with gr.Row():
+                    #     # load_quiz_btn = gr.Button("載入題目", variant="secondary")
+                    #     prev_quiz_btn = gr.Button("上一題", variant="primary")
+                    #     next_quiz_btn = gr.Button("下一題", variant="primary")
+
+                    quiz_text_view = gr.Textbox(label="題目內容", lines=12, interactive=False)
+
+                    with gr.Row():
+                        mcq_choice = gr.Radio(
+                            show_label=False,
+                            choices=["A", "B", "C", "D"],
+                            interactive=True
+                        )
+                        status_text_quiz = gr.Textbox(show_label=False, interactive=False)
+
+                        with gr.Row():
+                            # load_quiz_btn = gr.Button("載入題目", variant="secondary")
+                            prev_quiz_btn = gr.Button("上一題", variant="primary")
+                            next_quiz_btn = gr.Button("下一題", variant="primary")
+
+                    # ====== 事件綁定（之後接上你的函式） ======
+                    # load_quiz_btn.click(
+                    #     fn=on_load_quiz_text,
+                    #     inputs=None,
+                    #     outputs=[quiz_text_view, status_text_quiz]
+                    # )
+                    # mcq_choice.change(
+                    #     fn=check_answer_choice_simple,
+                    #     inputs=[mcq_choice, ans_unlocked_text],
+                    #     outputs=[status_text_quiz, ans_unlocked_text]
+                    # )
+
+       
+
+
+
 
 if __name__ == "__main__":
     demo.launch(
-        share=True,
-        auth=("1c5", "203"),
-        auth_message="需要帳密才能使用"
+        # share=False,
+        # auth=("1c5", "203"),
+        # auth_message="需要帳密才能使用"
     )
