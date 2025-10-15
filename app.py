@@ -118,7 +118,7 @@ def on_show_answers(unlocked: bool):
         return f"❌ 讀取失敗：{e}"
 
 # ====== Gradio interface（加入分類：聽力測驗／文字測驗） ======
-with gr.Blocks(title="ListeningTest", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="ListeningTest", theme="soft") as demo:
     gr.Markdown("## 🎧 ListeningTest\n> 每頁的步驟完成後才換下頁")
 
     # 最高層：兩大分類

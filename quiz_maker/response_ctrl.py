@@ -14,7 +14,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
 async def read_txt_file(file_path: str) -> str:
-    "read transcription"
+    # read transcription
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
@@ -46,18 +46,16 @@ async def generate_question_from_text(text: str, quiz_count: str):
         f"Transcript:\n{text}"
     )
 
-
-
     try:
         print("⏳ 正在產生題目文字檔...")
-        response = await client.chat.completions.create(
+        response = await client.responses.create(
             model="gpt-4o-mini",
-            messages=[
+            input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ]
         )
-        result = response.choices[0].message.content
+        result = response.output_text
         print("✅ 題目文字檔已完成...")
         # print(result)
 
@@ -78,4 +76,4 @@ async def core(quiz_count):
         print("Error:", content)
 
 if __name__ == "__main__":
-    asyncio.run(core())
+    asyncio.run(core(2))
