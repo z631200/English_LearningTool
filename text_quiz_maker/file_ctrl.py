@@ -40,19 +40,21 @@ async def create_vector_store():
 
     return vector_store_id
 
-async def upload_file_to_vector_store(vector_store_id: str):
-    file_path = select_file()
-    if not file_path:
+async def upload_file_to_vector_store(file_path_list, vector_store_id: str):
+    # file_path = select_file()
+    if not file_path_list:
         print("⚠️ 未選擇檔案，已跳過上傳")
         return
 
     # 注意：這個呼叫同樣需要 await
-    with open(file_path, "rb") as f:
-        upload = await client.vector_stores.files.upload(
-            vector_store_id=vector_store_id,
-            file=f
-        )
-    print(f"✅ 檔案已上傳到 Vector Store ({vector_store_id})：{upload.id}")
+    for file_path in file_path_list:
+        with open(file_path, "rb") as f:
+            upload = await client.vector_stores.files.upload(
+                vector_store_id=vector_store_id,
+                file=f
+            )
+        print(f"✅ 檔案已上傳到 Vector Store ({vector_store_id})：{upload.id}")
+    return upload.id
 
 async def delete_vector_store_all(target_name: str = "SE_Class"):
     try:
@@ -90,14 +92,14 @@ async def delete_vector_store_all(target_name: str = "SE_Class"):
             except Exception as e:
                 print(f"⚠️ 無法列出 Vector Store 檔案：{str(e)}")
 
-            try:
-                await client.vector_stores.delete(vector_store_id=store.id)
-                print(f"✅ 已刪除 Vector Store：{store.id} ({store.name})")
-            except Exception as e:
-                print(f"⚠️ 刪除 Vector Store {store.id} 時發生錯誤: {str(e)}")
+            await client.vector_stores.delete(vector_store_id=store.id)
+            print(f"✅ 已刪除 Vector Store：{store.id} ({store.name})")
+            return "刪除完成"
+            print(f"⚠️ 刪除 Vector Store {store.id} 時發生錯誤: {str(e)}")
 
     except Exception as e:
         print(f"🚨 發生未預期錯誤：{str(e)}")
+        return f"發生錯誤: {str(e)}"
 
 
 async def main():
@@ -105,6 +107,15 @@ async def main():
     await upload_file_to_vector_store(vs_id)
     print("Vector Store ID:", vs_id)
 
+async def core(file_upload):
+    vs_id = await create_vector_store()
+    file_id = await upload_file_to_vector_store(file_upload, vs_id)
+    print("Vector Store ID:", vs_id)
+    if vs_id and file_id:
+        return f"上傳成功"
+    else:
+        return "Vector Store 建立或檔案上傳失敗"
+
 if __name__ == "__main__":
-    # asyncio.run(main())
-    asyncio.run(delete_vector_store_all())
+    asyncio.run(main())
+    # asyncio.run(delete_vector_store_all())

@@ -5,6 +5,8 @@ from transcription_maker import whisper_ctrl
 from quiz_maker import response_ctrl
 from quiz_speaker import audio_maker
 from start_quiz import quiz_ctrl
+from text_quiz_maker import file_ctrl
+from text_quiz_maker import response_ctrl as text_response_ctrl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
@@ -192,15 +194,16 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
                         clear_btn = gr.Button("刪除全部上傳檔案", variant="stop")
 
                     # === 事件綁定（之後接上你的函式）===
-                    # upload_btn.click(
-                    #     fn=on_upload_files,        # 你的上傳處理函式
-                    #     inputs=file_upload,
-                    #     outputs=status_text_files
-                    # )
-                    # clear_btn.click(
-                    #     fn=on_clear_all_files,     # 你的清空處理函式
-                    #     outputs=status_text_files
-                    # )
+                    file_upload.upload(
+                        fn=file_ctrl.core,
+                        inputs=file_upload,
+                        outputs=status_text_files
+                    )
+
+                    clear_btn.click(
+                        fn=file_ctrl.delete_vector_store_all,     # 你的清空處理函式
+                        outputs=status_text_files
+                    )
 
                 with gr.Tab("產生題目"):
                     quiz_count_text = gr.Textbox(
