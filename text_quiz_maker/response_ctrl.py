@@ -14,17 +14,19 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
 async def read_vector_file():
-    stores = client.vector_stores.list().data
+    stores = []
+    async for store in client.vector_stores.list():
+        stores.append(store)
+
     existing = next((s for s in stores if s.name == "SE_Class"), None)
 
     if existing:
         vector_store_id = existing.id
         print("✅ 已存在 vector store:", vector_store_id)
+        return vector_store_id
     else:
         print("⛔ 尚未建立 vector store，請先上傳檔案")
         return None
-    
-    return vector_store_id
 
 
 async def write_to_test_file(content: str):
@@ -61,9 +63,6 @@ async def generate_question_from_text(vector_store_id, quiz_count: str):
         f"Only output the questions and answers in this format, with no explanations or extra text.\n\n"
     )
 
-
-
-
     try:
         print("⏳ 正在產生題目文字檔...")
         response = await client.chat.completions.create(
@@ -87,12 +86,58 @@ async def generate_question_from_text(vector_store_id, quiz_count: str):
     except Exception as e:
         print(f"API error: {str(e)}")
 
+async def test_func(vector_store_id: str):
+    system_prompt = "你可以檢索我提供的向量庫，並據此回答。請列出向量庫內有哪些檔案與其大綱/重點。"
 
-async def core(quiz_count):
+    try:
+        print("⏳ 正在向向量庫檢索並產生回覆...")
+        response = await client.responses.create(
+            model="gpt-4o-mini",
+            input=[
+                {"role": "system", "content": ""},
+                {"role": "user", "content": "tell me what is in the vector store and the content of the files"},
+            ],
+            tools=[{
+                "type": "file_search",
+                "vector_store_ids": [vector_store_id],
+            }],
+            tool_choice="auto",
+        )
+
+        # 取文字輸出（新版 SDK 多半有 output_text；保留退路以防沒有）
+        try:
+            result_text = response.output_text
+        except AttributeError:
+            # 後備做法：手動拼接 output 區段中的文字
+            result_text = ""
+            for item in getattr(response, "output", []) or []:
+                for c in getattr(item, "content", []) or []:
+                    if getattr(c, "type", "") in ("output_text", "text"):
+                        # c 可能是物件或 dict，兩者都處理
+                        text_val = getattr(c, "text", None) or (c.get("text") if isinstance(c, dict) else None)
+                        if text_val:
+                            result_text += text_val + "\n"
+
+        if result_text and result_text.strip():
+            print("✅ 完成。")
+            print(f"API return: {result_text}")
+            # 若你有自訂寫檔函式，維持不變
+            await write_to_test_file(result_text)
+        else:
+            print("⚠️ 沒有取得可用文字輸出（可能只有引用/工具呼叫內容）。")
+    except Exception as e:
+        print(f"API error: {str(e)}")
+
+
+
+# async def core(quiz_count):
+async def core():
+    quiz_count = 2
     try:
         vector_store_id = await read_vector_file()
         if vector_store_id:
-            await generate_question_from_text(vector_store_id, quiz_count)
+            # await generate_question_from_text(vector_store_id, quiz_count)
+            await test_func(vector_store_id)
         else:
             print("請先上傳檔案以建立 vector store。")
     except Exception as e:
