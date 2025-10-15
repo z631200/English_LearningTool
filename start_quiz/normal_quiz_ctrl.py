@@ -1,53 +1,46 @@
 import os
+import re
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
 
-def extract_answer(file_path):
-    if not os.path.exists(file_path):
-        print(f"⛔ 題目檔案不存在：{file_path}")
-        raise FileNotFoundError(f"⛔ 題目檔案不存在")
-
-    with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            if line.startswith("Answer:"):
-                answer = line.replace("Answer:", "").strip().lower()
-                return answer
-
-    print("⛔ 找不到答案")
-    return None
-
-def check_user_answer(correct_answer):
-    user_input = input("\n請輸入你的答案（格式：C,C,C）：").strip().lower()
-
-    if user_input == correct_answer:
-        print("🥳 答案正確！")
-    else:
-        print(f"😢 答案錯誤。正確答案是：{correct_answer}")
-
-def show_quiz(file_path):
+def get_question(question_num: int):
+    file_path = os.path.join(OUTPUT_DIR, "NormalTest.txt")
     if not os.path.exists(file_path):
         print(f"檔案不存在：{file_path}")
-        return
+        return None, None
 
-    print("\n=== 測驗內容如下 ===\n")
     with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
-        print(content)
-    print("\n====================\n")
 
+    # 使用正則表達式擷取指定題目
+    # 模式說明：
+    # - 找出 "Question {num}:" 開頭
+    # - 直到下一個 "Question " 或檔案結尾為止
+    pattern = rf"Question {question_num}:(.*?)(?=Question \d+:|$)"
+    match = re.search(pattern, content, re.DOTALL)
+
+    if not match:
+        print(f"⚠️ 找不到第 {question_num} 題")
+        return None, None
+
+    question_block = match.group(1).strip()
+
+    # 分離題目內容與答案
+    # 找出 "Answer: " 行
+    answer_match = re.search(r"Answer:\s*([A-D])", question_block)
+    correct_answer = answer_match.group(1).strip() if answer_match else ""
+
+    # 去除 Answer 段落後，留下題目文字
+    question_text = re.sub(r"Answer:\s*[A-D].*", "", question_block, flags=re.DOTALL).strip()
+
+    return question_text, correct_answer
 
 def core():
-    file_path = os.path.join(OUTPUT_DIR, "NormalTest.txt")
-    correct_answer = extract_answer(file_path)
-
-    if correct_answer:
-        check_user_answer(correct_answer)
-
-    showing_quiz = input("\n是否查看考試題目與答案? (y/n): ").lower()
-    if showing_quiz == "y":
-        show_quiz(file_path)
+    question_txt, answer_txt = get_question(3)
+    print("題目：\n", question_txt)
+    print("\n答案：\n", answer_txt)
+    return
 
 if __name__ == "__main__":
     core()
