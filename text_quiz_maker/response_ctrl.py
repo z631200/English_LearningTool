@@ -65,30 +65,36 @@ async def generate_question_from_text(vector_store_id, quiz_count: str):
 
     try:
         print("⏳ 正在產生題目文字檔...")
-        response = await client.chat.completions.create(
+        response = await client.responses.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+            instructions=system_prompt,
+            input=[
+                {"role": "system", "content": user_prompt},
+                {"role": "user", "content": "only use the content in page 9 to 11"}
             ],
-            tools=[{"type": "file_search"}],
+            tools=[{
+                "type": "file_search",
+                "vector_store_ids": [vector_store_id],
+                }],
             tool_choice="auto",
-            file_search={"vector_store_ids": [vector_store_id]},
         )
-        result = response.choices[0].message.content
-        print("✅ 題目文字檔已完成...")
-        # print(result)
+        try:
+            result = response.output_text
+            print("✅ 題目文字檔已完成...")
+            # print(result)
+            if isinstance(result, str):
+                await write_to_test_file(result)
+            else:
+                print("API 回傳的結果格式不正確，為 None 或其他型別。")
+        except AttributeError:
+            result = None
+            print("⚠️ 無法取得 output_text 屬性")
 
-        if isinstance(result, str):
-            await write_to_test_file(result)
-        else:
-            print("API 回傳的結果格式不正確，為 None 或其他型別。")
+
     except Exception as e:
         print(f"API error: {str(e)}")
 
 async def test_func(vector_store_id: str):
-    system_prompt = "你可以檢索我提供的向量庫，並據此回答。請列出向量庫內有哪些檔案與其大綱/重點。"
-
     try:
         print("⏳ 正在向向量庫檢索並產生回覆...")
         response = await client.responses.create(
@@ -129,15 +135,14 @@ async def test_func(vector_store_id: str):
         print(f"API error: {str(e)}")
 
 
-
 # async def core(quiz_count):
 async def core():
     quiz_count = 2
     try:
         vector_store_id = await read_vector_file()
         if vector_store_id:
-            # await generate_question_from_text(vector_store_id, quiz_count)
-            await test_func(vector_store_id)
+            await generate_question_from_text(vector_store_id, quiz_count)
+            # await test_func(vector_store_id)
         else:
             print("請先上傳檔案以建立 vector store。")
     except Exception as e:

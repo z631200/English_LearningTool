@@ -55,24 +55,49 @@ async def upload_file_to_vector_store(vector_store_id: str):
     print(f"✅ 檔案已上傳到 Vector Store ({vector_store_id})：{upload.id}")
 
 async def delete_vector_store_all(target_name: str = "SE_Class"):
-    page = await client.vector_stores.list()
-    stores = page.data
+    try:
+        page = await client.vector_stores.list()
+        stores = page.data
+        matches = [s for s in stores if s.name == target_name]
+        if not matches:
+            print(f"⛔ 找不到名為 '{target_name}' 的 Vector Store，無法刪除")
+            return
 
-    # 找出所有同名 vector store
-    matches = [s for s in stores if s.name == target_name]
+        for store in matches:
+            print(f"\n📦 處理 Vector Store：{store.name} ({store.id})")
+            try:
+                files_page = await client.vector_stores.files.list(vector_store_id=store.id)
+                files = files_page.data
 
-    if not matches:
-        print(f"⛔ 找不到名為 '{target_name}' 的 Vector Store，無法刪除")
-        return
+                if not files:
+                    print("🗑️ 無任何檔案可刪除。")
+                else:
+                    for f in files:
+                        try:
+                            # 1️⃣ 先從 vector store 中移除檔案連結
+                            await client.vector_stores.files.delete(
+                                vector_store_id=store.id,
+                                file_id=f.id
+                            )
+                            print(f"   🔗 已移除檔案連結：{f.id}")
 
-    for s in matches:
-        try:
-            await client.vector_stores.delete(id=s.id)
-            print(f"✅ 已刪除 Vector Store：{s.id} ({s.name})")
-        except Exception as e:
-            print(f"⚠️ 刪除 {s.id} 時發生錯誤: {str(e)}")
+                            # 2️⃣ 刪除底層檔案
+                            await client.files.delete(file_id=f.id)
+                            print(f"   🧾 已刪除底層檔案：{f.id}")
 
-    print(f"🧹 共刪除 {len(matches)} 個名為 '{target_name}' 的 Vector Store")
+                        except Exception as e:
+                            print(f"   ⚠️ 刪除檔案 {f.id} 時發生錯誤: {str(e)}")
+            except Exception as e:
+                print(f"⚠️ 無法列出 Vector Store 檔案：{str(e)}")
+
+            try:
+                await client.vector_stores.delete(vector_store_id=store.id)
+                print(f"✅ 已刪除 Vector Store：{store.id} ({store.name})")
+            except Exception as e:
+                print(f"⚠️ 刪除 Vector Store {store.id} 時發生錯誤: {str(e)}")
+
+    except Exception as e:
+        print(f"🚨 發生未預期錯誤：{str(e)}")
 
 
 async def main():
@@ -81,5 +106,5 @@ async def main():
     print("Vector Store ID:", vs_id)
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    # asyncio.run(delete_vector_store_all())
+    # asyncio.run(main())
+    asyncio.run(delete_vector_store_all())
