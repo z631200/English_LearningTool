@@ -39,7 +39,7 @@ async def write_to_test_file(content: str):
         print(f"寫入檔案時發生錯誤: {str(e)}")
 
 
-async def generate_question_from_text(vector_store_id, quiz_count: str):
+async def generate_question_from_text(vector_store_id, quiz_count: str, input_prompt: str = ""):
     system_prompt = (
         "You are a university Software Engineering professor. "
         "Your role is to create multiple-choice quiz questions that test students’ understanding "
@@ -70,7 +70,7 @@ async def generate_question_from_text(vector_store_id, quiz_count: str):
             instructions=system_prompt,
             input=[
                 {"role": "system", "content": user_prompt},
-                {"role": "user", "content": "only use the content in page 9 to 11"}
+                {"role": "user", "content": input_prompt},
             ],
             tools=[{
                 "type": "file_search",
@@ -135,8 +135,21 @@ async def test_func(vector_store_id: str):
         print(f"API error: {str(e)}")
 
 
-# async def core(quiz_count):
-async def core():
+async def core(quiz_count, input_prompt=""):
+    try:
+        vector_store_id = await read_vector_file()
+        if vector_store_id:
+            await generate_question_from_text(vector_store_id, quiz_count, input_prompt)
+            # await test_func(vector_store_id)
+            return f"✅ 已產生 {quiz_count} 題"
+        else:
+            print("請先上傳檔案以建立 vector store。")
+            return "❌ 尚未建立 vector store，請先上傳檔案"
+    except Exception as e:
+        print(f"發生錯誤: {str(e)}")
+        return f"❌ 發生錯誤: {str(e)}"
+
+async def main():
     quiz_count = 2
     try:
         vector_store_id = await read_vector_file()
@@ -148,5 +161,6 @@ async def core():
     except Exception as e:
         print(f"發生錯誤: {str(e)}")
 
+
 if __name__ == "__main__":
-    asyncio.run(core())
+    asyncio.run(main())

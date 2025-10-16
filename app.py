@@ -69,8 +69,20 @@ async def on_generate_questions(quiz_count: str):
         n = int(quiz_count)
         if n < 1 or n > 10:
             return "❗ 題數需在1~10"
-        await response_ctrl.core(n)
+        await response_ctrl.core(n) 
         return f"✅ 已產生 {n} 題"
+    except (TypeError, ValueError):
+        return "❗ 請輸入整數題數(例如:3)"
+    except Exception as e:
+        return f"❌ 錯誤：{str(e)}"
+    
+async def on_generate_text_questions(quiz_count, extra_prompt=""):
+    try:
+        n = int(quiz_count)
+        if n < 1 or n > 20:
+            return "❗ 題數需在1~10"
+        status_text_gen = await text_response_ctrl.core(n, extra_prompt)
+        return status_text_gen
     except (TypeError, ValueError):
         return "❗ 請輸入整數題數(例如:3)"
     except Exception as e:
@@ -184,16 +196,14 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
         # ====== 分類二：文字測驗 ======
         with gr.Tab("文字測驗"):
             with gr.Tabs():
-                # ====== 新增：獨立的「教材 / 檔案管理」頁籤（頁面） ======
+                # ====== 教材 / 檔案管理頁面 ======
                 with gr.Tab("教材 / 檔案管理"):
                     with gr.Row():
                         file_upload = gr.File(label="上傳教材檔案", file_count="multiple", type="filepath")
                     status_text_files = gr.Textbox(label="狀態", interactive=False)
                     with gr.Row():
-                        # upload_btn = gr.Button("上傳檔案", variant="secondary")
                         clear_btn = gr.Button("刪除全部上傳檔案", variant="stop")
 
-                    # === 事件綁定（之後接上你的函式）===
                     file_upload.upload(
                         fn=file_ctrl.core,
                         inputs=file_upload,
@@ -201,44 +211,32 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
                     )
 
                     clear_btn.click(
-                        fn=file_ctrl.delete_vector_store_all,     # 你的清空處理函式
+                        fn=file_ctrl.delete_vector_store_all,
                         outputs=status_text_files
                     )
 
+                # ====== 題目頁面 ======
                 with gr.Tab("產生題目"):
                     quiz_count_text = gr.Textbox(
                         label="題數", value="", placeholder="輸入要產生的題數"
                     )
-
-                    # ✅ 新增：補充 prompt（只改 UI）
                     extra_prompt_text = gr.Textbox(
                         label="補充prompt",
                         placeholder="可選：補充出題說明、限制或語氣（例如：側重軟體工程術語、限制只出單選題）",
                         lines=3
                     )
 
-                    # 顯示目前狀態
                     status_text_gen = gr.Textbox(label="狀態", interactive=False)
-
-                    # 產生題目按鈕
                     gen_btn_text = gr.Button("產生題目", variant="primary")
 
-                    # === 事件綁定（之後接上你的函式）===
-                    # gen_btn_text.click(
-                    #     fn=on_generate_questions,
-                    #     inputs=[quiz_count_text, extra_prompt_text],
-                    #     outputs=status_text_gen
-                    # )
+                    gen_btn_text.click(
+                        fn=on_generate_text_questions,
+                        inputs=[quiz_count_text, extra_prompt_text],
+                        outputs=status_text_gen
+                    )
 
-                # ✅ t2. 檢視與測驗（文字）
+                # ====== 測驗頁面 ======
                 with gr.Tab("檢視與測驗"):
-                    ans_unlocked_text = gr.State(False)
-
-                    # with gr.Row():
-                    #     # load_quiz_btn = gr.Button("載入題目", variant="secondary")
-                    #     prev_quiz_btn = gr.Button("上一題", variant="primary")
-                    #     next_quiz_btn = gr.Button("下一題", variant="primary")
-
                     quiz_text_view = gr.Textbox(label="題目內容", lines=12, interactive=False)
 
                     with gr.Row():
@@ -250,20 +248,23 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
                         status_text_quiz = gr.Textbox(show_label=False, interactive=False)
 
                         with gr.Row():
-                            # load_quiz_btn = gr.Button("載入題目", variant="secondary")
                             prev_quiz_btn = gr.Button("上一題", variant="primary")
                             next_quiz_btn = gr.Button("下一題", variant="primary")
 
-                    # ====== 事件綁定（之後接上你的函式） ======
-                    # load_quiz_btn.click(
+                    # prev_quiz_btn.click(
                     #     fn=on_load_quiz_text,
                     #     inputs=None,
-                    #     outputs=[quiz_text_view, status_text_quiz]
+                    #     outputs=quiz_text_view
+                    # )
+                    # next_quiz_btn.click(
+                    #     fn=on_load_quiz_text,
+                    #     inputs=None,
+                    #     outputs=quiz_text_view
                     # )
                     # mcq_choice.change(
-                    #     fn=check_answer_choice_simple,
-                    #     inputs=[mcq_choice, ans_unlocked_text],
-                    #     outputs=[status_text_quiz, ans_unlocked_text]
+                    #     fn=check_answer_choice,
+                    #     inputs=mcq_choice,
+                    #     outputs=status_text_quiz
                     # )
 
        
