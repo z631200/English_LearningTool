@@ -42,25 +42,29 @@ async def write_to_test_file(content: str):
 async def generate_question_from_text(vector_store_id, quiz_count: str, input_prompt: str = ""):
     system_prompt = (
         "You are a university Software Engineering professor. "
-        "Your role is to create multiple-choice quiz questions that test students’ understanding "
+        "Your task is to create multiple-choice quiz questions that test students’ understanding "
         "of materials stored in a specified vector store. "
         "Each question must be answerable *only* using information contained in the vector store files. "
         "Do not use external knowledge or assumptions. "
-        "All questions should reflect the content, terminology, and examples found in the vector store documents."
+        "All questions should reflect the content, terminology, and examples found in the vector store documents. "
+        "Ensure that the correct answers are distributed *evenly* among A, B, C, and D, "
+        "and that the correct answer positions are randomized naturally across the quiz."
     )
 
     user_prompt = (
         f"Based on the materials retrieved from the specified vector store about Software Engineering, "
         f"generate {quiz_count} single-choice questions in the following format:\n\n"
-        f"Question 1:\n<question based on vector store content>\n\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: A\n\n"
+        f"Question 1:\n<question based on vector store content>\n\n"
+        f"A) ...\nB) ...\nC) ...\nD) ...\nAnswer: A\n\n"
         f"Question 2:\n...\n\nAnswer: B\n\n"
         f"The questions should assess understanding of software engineering concepts, "
-        f"principles, methodologies, or examples discussed in the retrieved documents.\n"
-        f"Each answer must be directly supported by the content of the vector store — "
-        f"do not create answers not found within it.\n"
-        f"Use expressions like 'According to the material' or 'In the lecture notes' "
-        f"instead of 'According to the vector store'.\n"
-        f"Only output the questions and answers in this format, with no explanations or extra text.\n\n"
+        f"principles, methodologies, or examples discussed in the retrieved documents.\n\n"
+        f"Requirements:\n"
+        f"- Each answer must be directly supported by the content of the vector store.\n"
+        f"- Use expressions like 'According to the material' or 'In the lecture notes' instead of 'According to the vector store'.\n"
+        f"- Do NOT output explanations or commentary — only the questions and answers in the exact format.\n"
+        f"- Ensure that the correct answers (A, B, C, D) are *well distributed* and not repetitive. "
+        f"For example, across {quiz_count} questions, each letter should appear roughly the same number of times.\n"
     )
 
     try:
