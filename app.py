@@ -7,6 +7,7 @@ from quiz_speaker import audio_maker
 from start_quiz import quiz_ctrl
 from text_quiz_maker import file_ctrl
 from text_quiz_maker import response_ctrl as text_response_ctrl
+from start_quiz import normal_quiz_ctrl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
@@ -130,6 +131,45 @@ def on_show_answers(unlocked: bool):
         return "❌ 找不到檔案"
     except Exception as e:
         return f"❌ 讀取失敗：{e}"
+    
+def show_previous_quiz(current_page):
+    try:
+        if current_page == 0:    
+            question_text = normal_quiz_ctrl.get_question_text(1)
+            return question_text, "", gr.update(value=None), 1
+        elif current_page == 1:
+            return gr.update(), "已經是第一題", gr.update(value=None), 1
+        else:
+            question_text = normal_quiz_ctrl.get_question_text(current_page - 1)
+            return question_text, "", gr.update(value=None), current_page -1
+
+    except Exception as e:
+        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", current_page
+
+def show_next_quiz(current_page):
+    try:
+        question_text = normal_quiz_ctrl.get_question_text(current_page + 1)
+        if not question_text:
+            return gr.update(), "已經是最後一題", gr.update(value=None), current_page
+    except Exception as e:
+        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page
+    
+    return question_text, "", gr.update(value=None), current_page + 1
+
+def check_answer_text(user_choice, current_page):
+    try:
+        if not current_page or current_page < 1:
+            return "❗ 請先載入題目"
+        if user_choice:
+            correct_answer = normal_quiz_ctrl.get_correct_answer(current_page)
+            if user_choice == correct_answer:
+                return "🥳 答案正確！"
+            else:
+                return f"😢 錯誤。正確答案：{correct_answer}"
+        else:
+            return gr.update(value="")
+    except Exception as e:
+        return f"⛔ 檢查答案時發生錯誤: {str(e)}"
 
 # ====== Gradio interface（加入分類：聽力測驗／文字測驗） ======
 with gr.Blocks(title="ListeningTest", theme="soft") as demo:
@@ -237,6 +277,7 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
 
                 # ====== 測驗頁面 ======
                 with gr.Tab("檢視與測驗"):
+                    current_page = gr.State(0)
                     quiz_text_view = gr.Textbox(label="題目內容", lines=12, interactive=False)
 
                     with gr.Row():
@@ -251,25 +292,21 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
                             prev_quiz_btn = gr.Button("上一題", variant="primary")
                             next_quiz_btn = gr.Button("下一題", variant="primary")
 
-                    # prev_quiz_btn.click(
-                    #     fn=on_load_quiz_text,
-                    #     inputs=None,
-                    #     outputs=quiz_text_view
-                    # )
-                    # next_quiz_btn.click(
-                    #     fn=on_load_quiz_text,
-                    #     inputs=None,
-                    #     outputs=quiz_text_view
-                    # )
-                    # mcq_choice.change(
-                    #     fn=check_answer_choice,
-                    #     inputs=mcq_choice,
-                    #     outputs=status_text_quiz
-                    # )
-
-       
-
-
+                    prev_quiz_btn.click(
+                        fn=show_previous_quiz,
+                        inputs=[current_page],
+                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page]
+                    )
+                    next_quiz_btn.click(
+                        fn=show_next_quiz,
+                        inputs=[current_page],
+                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page]
+                    )
+                    mcq_choice.change(
+                        fn=check_answer_text,
+                        inputs=[mcq_choice, current_page],
+                        outputs=status_text_quiz
+                    )
 
 
 if __name__ == "__main__":
