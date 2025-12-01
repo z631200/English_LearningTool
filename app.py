@@ -172,8 +172,8 @@ def check_answer_text(user_choice, current_page):
         return f"⛔ 檢查答案時發生錯誤: {str(e)}"
 
 # ====== Gradio interface（加入分類：聽力測驗／文字測驗） ======
-with gr.Blocks(title="ListeningTest", theme="soft") as demo:
-    gr.Markdown("## 🎧 ListeningTest\n> 每頁的步驟完成後才換下頁")
+with gr.Blocks(title="TestTools", theme="soft") as demo:
+    gr.Markdown("## 🎧 TestTools\n> 每頁的步驟完成後才換下頁")
 
     # 最高層：兩大分類
     with gr.Tabs():
@@ -311,7 +311,7 @@ with gr.Blocks(title="ListeningTest", theme="soft") as demo:
 
 if __name__ == "__main__":
     demo.launch(
-        # share=False,
-        # auth=("1c5", "203"),
+        share=True,
+        auth=("123", "123"),
         # auth_message="需要帳密才能使用"
     )
