@@ -1,4 +1,5 @@
 import os
+import re
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_file")
@@ -10,9 +11,12 @@ def extract_answer(file_path):
 
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
-            line = line.strip()
-            if line.startswith("Answer:"):
-                answer = line.replace("Answer:", "").strip().lower()
+            raw_line = line.strip()
+
+            cleaned = raw_line.replace("**", "")
+            match = re.search(r'(?i)answer\s*:?\s*(.+)', cleaned)
+            if match:
+                answer = match.group(1).strip().lower()
                 return answer
 
     print("⛔ 找不到答案")
