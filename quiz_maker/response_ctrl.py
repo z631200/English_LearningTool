@@ -3,6 +3,7 @@ from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import random
 
 env_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -32,9 +33,19 @@ async def write_to_listening_test_file(content: str):
     except Exception as e:
         print(f"寫入檔案時發生錯誤: {str(e)}")
 
-async def generate_question_from_text(text: str, quiz_count: str):
+def random_choices(n: int):
+    options = ['a', 'b', 'c', 'd']
+    result = [random.choice(options) for _ in range(n)]
+    random.shuffle(result)
+    # print("Correct answer pattern:", ",".join(result))
+    return ",".join(result)
+
+async def generate_question_from_text(text: str, quiz_count: str, input_prompt: str = ""):
+    answer_pattern = random_choices(int(quiz_count))
     system_prompt = "You are an assistant that generates English quiz questions based on a video clip used in English listening tests."
     user_prompt = (
+        f"The correct answers for the questions should be: {answer_pattern}\n\n"
+        f"{input_prompt}\n\n"
         f"Based on the following transcript of a video used in an English listening comprehension test, "
         f"generate {quiz_count} multiple-choice questions in the following format:\n\n"
         f"Question 1:\n<question based on what listeners hear>\n\nA) ...\nB) ...\nC) ...\nD) ...\n\n"
@@ -44,15 +55,17 @@ async def generate_question_from_text(text: str, quiz_count: str):
         f"Use expressions like 'According to the video' instead of 'According to the transcript' to reflect a listening context.\n"
         f"Only output the questions and answers in this format, no explanation.\n\n"
         f"Transcript:\n{text}"
+
     )
 
     try:
         print("⏳ 正在產生題目文字檔...")
         response = await client.responses.create(
-            model="gpt-4o-mini",
+            model="gpt-4.1-mini",
+            instructions=system_prompt,
             input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
+                # {"role": "user", "content": input_prompt}
             ]
         )
         result = response.output_text
@@ -66,12 +79,12 @@ async def generate_question_from_text(text: str, quiz_count: str):
     except Exception as e:
         print(f"API error: {str(e)}")
 
-async def core(quiz_count):
+async def core(quiz_count, input_prompt=""):
     file_path = os.path.join(OUTPUT_DIR, "transcription.txt")
     content = await read_txt_file(file_path)
     if "Error" not in content and "not found" not in content:
         # quiz_count = input("\n請輸入題數：")
-        await generate_question_from_text(content,quiz_count)
+        await generate_question_from_text(content, quiz_count, input_prompt)
     else:
         print("Error:", content)
 

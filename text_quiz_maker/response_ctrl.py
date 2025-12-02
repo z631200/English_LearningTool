@@ -3,6 +3,7 @@ from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import random
 
 env_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -38,8 +39,15 @@ async def write_to_test_file(content: str):
     except Exception as e:
         print(f"寫入檔案時發生錯誤: {str(e)}")
 
+def random_choices(n: int):
+    options = ['a', 'b', 'c', 'd']
+    result = [random.choice(options) for _ in range(n)]
+    random.shuffle(result)
+    # print("Correct answer pattern:", ",".join(result))
+    return ",".join(result)
 
 async def generate_question_from_text(vector_store_id, quiz_count: str, input_prompt: str = ""):
+    answer_pattern = random_choices(int(quiz_count))
     system_prompt = (
         "You are a university Software Engineering professor. "
         "Your task is to create multiple-choice quiz questions that test students’ understanding "
@@ -47,11 +55,12 @@ async def generate_question_from_text(vector_store_id, quiz_count: str, input_pr
         "Each question must be answerable *only* using information contained in the vector store files. "
         "Do not use external knowledge or assumptions. "
         "All questions should reflect the content, terminology, and examples found in the vector store documents. "
-        "Ensure that the correct answers are distributed *evenly* among A, B, C, and D, "
         "and that the correct answer positions are randomized naturally across the quiz."
     )
 
     user_prompt = (
+        f"The correct answers for the questions should be: {answer_pattern}\n\n"
+        f"{input_prompt}\n\n"
         f"Based on the materials retrieved from the specified vector store about Software Engineering, "
         f"generate {quiz_count} single-choice questions in the following format:\n\n"
         f"Question 1:\n<question based on vector store content>\n\n"
@@ -70,11 +79,11 @@ async def generate_question_from_text(vector_store_id, quiz_count: str, input_pr
     try:
         print("⏳ 正在產生題目文字檔...")
         response = await client.responses.create(
-            model="gpt-4o-mini",
+            model="gpt-4.1-mini",
             instructions=system_prompt,
             input=[
-                {"role": "system", "content": user_prompt},
-                {"role": "user", "content": input_prompt},
+                {"role": "user", "content": user_prompt},
+                # {"role": "user", "content": input_prompt},
             ],
             tools=[{
                 "type": "file_search",
@@ -82,19 +91,18 @@ async def generate_question_from_text(vector_store_id, quiz_count: str, input_pr
                 }],
             tool_choice="auto",
         )
-        try:
-            result = response.output_text
-            print("✅ 題目文字檔已完成...")
-            # print(result)
-            if isinstance(result, str):
-                await write_to_test_file(result)
-            else:
-                print("API 回傳的結果格式不正確，為 None 或其他型別。")
-        except AttributeError:
-            result = None
-            print("⚠️ 無法取得 output_text 屬性")
+        
+        result = response.output_text
+        print("✅ 題目文字檔已完成...")
+        # print(result)
+        if isinstance(result, str):
+            await write_to_test_file(result)
+        else:
+            print("API 回傳的結果格式不正確，為 None 或其他型別。")
 
-
+    except AttributeError:
+        result = None
+        print("⚠️ 無法取得 output_text 屬性")
     except Exception as e:
         print(f"API error: {str(e)}")
 
@@ -153,18 +161,17 @@ async def core(quiz_count, input_prompt=""):
         print(f"發生錯誤: {str(e)}")
         return f"❌ 發生錯誤: {str(e)}"
 
-async def main():
-    quiz_count = 2
-    try:
-        vector_store_id = await read_vector_file()
-        if vector_store_id:
-            await generate_question_from_text(vector_store_id, quiz_count)
-            # await test_func(vector_store_id)
-        else:
-            print("請先上傳檔案以建立 vector store。")
-    except Exception as e:
-        print(f"發生錯誤: {str(e)}")
-
+# async def main():
+#     quiz_count = str(2)
+#     try:
+#         vector_store_id = await read_vector_file()
+#         if vector_store_id:
+#             await generate_question_from_text(vector_store_id, quiz_count)
+#             # await test_func(vector_store_id)
+#         else:
+#             print("請先上傳檔案以建立 vector store。")
+#     except Exception as e:
+#         print(f"發生錯誤: {str(e)}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(core(2))
