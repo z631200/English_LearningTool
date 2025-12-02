@@ -65,12 +65,12 @@ def on_show_transcript():
     except Exception as e:
         return "", f"❌ 讀取失敗：{e}"
 
-async def on_generate_questions(quiz_count: str):
+async def on_generate_questions(quiz_count, extra_prompt=""):
     try:
         n = int(quiz_count)
         if n < 1 or n > 10:
             return "❗ 題數需在1~10"
-        await response_ctrl.core(n) 
+        await response_ctrl.core(n, extra_prompt) 
         return f"✅ 已產生 {n} 題"
     except (TypeError, ValueError):
         return "❗ 請輸入整數題數(例如:3)"
@@ -194,12 +194,23 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
 
                 # p2. 產生題目（聽力）
                 with gr.Tab("產生題目"):
-                    quiz_count = gr.Textbox(label="題數", value="", placeholder="輸入要產生的題數")
-                    gen_btn = gr.Button("產生題目", variant="primary")
+                    quiz_count = gr.Textbox(
+                        label="題數", value="", placeholder="輸入要產生的題數"
+                    )
+                    extra_prompt_text = gr.Textbox(
+                        label="額外prompt",
+                        placeholder="可選：補充出題說明或限制等等",
+                        lines=3
+                    )
+
                     status_2 = gr.Textbox(label="狀態", interactive=False)
+                    gen_btn = gr.Button("產生題目", variant="primary")
 
-                    gen_btn.click(fn=on_generate_questions, inputs=quiz_count, outputs=status_2)
-
+                    gen_btn.click(
+                        fn=on_generate_questions, 
+                        inputs=[quiz_count, extra_prompt_text], 
+                        outputs=status_2
+                    )
                 # p3. 題目語音（聽力）
                 with gr.Tab("題目語音"):
                     with gr.Row():
@@ -261,8 +272,8 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                         label="題數", value="", placeholder="輸入要產生的題數"
                     )
                     extra_prompt_text = gr.Textbox(
-                        label="補充prompt",
-                        placeholder="可選：補充出題說明、限制或語氣（例如：側重軟體工程術語、限制只出單選題）",
+                        label="額外prompt",
+                        placeholder="可選：補充出題說明或限制等等",
                         lines=3
                     )
 
