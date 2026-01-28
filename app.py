@@ -81,7 +81,7 @@ async def on_generate_text_questions(quiz_count, extra_prompt=""):
     try:
         n = int(quiz_count)
         if n < 1 or n > 20:
-            return "❗ 題數需在1~10"
+            return "❗ 題數需在1~20"
         status_text_gen = await text_response_ctrl.core(n, extra_prompt)
         return status_text_gen
     except (TypeError, ValueError):
@@ -144,7 +144,7 @@ def show_previous_quiz(current_page):
             return question_text, "", gr.update(value=None), current_page -1
 
     except Exception as e:
-        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", current_page
+        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page
 
 def show_next_quiz(current_page):
     try:
