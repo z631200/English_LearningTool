@@ -1,5 +1,6 @@
 # ListeningTest
-Application for generating and conducting listening tests baesd on videos
+Application for generating and conducting listening tests baesd on videos.  
+This project can only run on windows.
 
 ## 🎯 Objective
 1. Create a listening test based on a video.
@@ -20,7 +21,7 @@ Application for generating and conducting listening tests baesd on videos
 ## 專案結構
 ```
 main/
-├── main.py
+├── app.py
 ├── config.py
 ├── output_file/         # 儲存輸出檔案
 ├── transcription_maker  # 逐字稿生成模組
@@ -40,8 +41,8 @@ main/
 
 ```
 
-## 套件 (temp)
-pip install dotenv openai pygame pydub yt-dlp  
+## 套件
+pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1  
 pip install git+https://github.com/openai/whisper.git
 
 ## reference

@@ -14,6 +14,7 @@ def format_time(seconds: float) -> str:
     mins = int((seconds % 3600) // 60)
     secs = int(seconds % 60)
     return f"{hrs:02}:{mins:02}:{secs:02}"
+
 def transcribe_with_original_time(mp3_path, segment_offset_map):
     model = whisper.load_model("base")
 
@@ -44,7 +45,6 @@ def map_whisper_segments_to_original(result, segment_offset_map):
         return f"{mins:02}:{secs:02}"
 
     mapped_segments = []
-
     for seg in result["segments"]:
         new_start_ms = int(seg["start"] * 1000)
 
@@ -67,27 +67,18 @@ def map_whisper_segments_to_original(result, segment_offset_map):
             "text": seg["text"]
         })
 
-    # ✅ 按照「原始時間」排序
+    # ✅ 排序
     mapped_segments.sort(key=lambda x: x["original_start"])
 
-    # 生成輸出檔案名稱（使用時間戳記）
-    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # output_file = f"transcription_{timestamp}.txt"
+    # 固定輸出檔案名稱
     output_file = os.path.join(OUTPUT_DIR, "transcription.txt")
 
-    show_transcription = input("是否顯示轉錄結果？(y/n)：").lower()
     with open(output_file, "w", encoding="utf-8") as f:
-        if show_transcription == "y":    
-            print("📋 含【原始音訊時間】的轉錄結果如下（已排序）：\n")
-        
         for seg in mapped_segments:
             start_str = format_time(seg["original_start"])
             end_str = format_time(seg["original_end"])
             line = f"[原始時間 {start_str} - {end_str}] {seg['text']}"
-            
-            if show_transcription == "y":
-                print(line)  # 輸出到終端機
-                
-            f.write(line + "\n")  # 寫入檔案
+            f.write(line + "\n")
 
     print(f"\n📋 轉錄結果已保存至：{output_file}")
+

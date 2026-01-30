@@ -18,33 +18,37 @@ input_file_path = os.path.join(OUTPUT_DIR, "ListeningTest.txt")
 def make_volume_audio():
     print("\n⏳ 正在產生音量測試語音檔...")
     volume_test_file_path = os.path.join(OUTPUT_DIR, "VolumeTest.mp3")
-    with client.audio.speech.with_streaming_response.create(
-        model="gpt-4o-mini-tts",
-        voice="coral",
-        input="Please adjust the volume. This is a test audio file.",
-        speed=0.8,
-    ) as response:
-        response.stream_to_file(volume_test_file_path)
-        print("✅ 測試語音檔已完成...")
-        print(f"音訊已儲存至 {volume_test_file_path}")
-
+    try:
+        with client.audio.speech.with_streaming_response.create(
+            model="gpt-4o-mini-tts",
+            voice="coral",
+            input="Please adjust the volume. This is a test audio file.",
+            speed=0.8,
+        ) as response:
+            response.stream_to_file(volume_test_file_path)
+            print("✅ 測試語音檔已完成...")
+            print(f"音訊已儲存至 {volume_test_file_path}")
+        return True, None
+    except Exception as e:
+        print(f"❌ 錯誤: {str(e)}")
+        return False, str(e)
 
 def make_audio():
     try:
         with open(input_file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        # 過濾掉 Answer 行
+        # filter Answer 
         filtered_lines = [line.strip() for line in lines if not line.strip().startswith("Answer:")]
-        # 切割題目
+        # split quiz
         question_list = split_question("\n".join(filtered_lines))
 
     except FileNotFoundError:
-        print("找不到 ListeningTest.txt 檔案。")
-        return
+        print("找不到 ListeningTest.txt 檔案")
+        return False, "找不到題目文字檔案"
     except Exception as e:
-        print(f"讀取 ListeningTest.txt 發生錯誤: {str(e)}")
-        return
+        print(f"生成語音檔案發生錯誤: {str(e)}")
+        return False, str(e)
 
     audio_paths = []
     print("🔊 題目語音檔產生中...")
@@ -66,11 +70,12 @@ def make_audio():
     print("✅ 所有題目語音檔產生完成！")
     merge_audio(audio_paths)
 
+    return True, None
+
 
 def split_question(input_text):
-    # 使用 "Question X:" 切割
+    # split by "Question X:"
     question_splits = re.split(r'(Question \d+:)', input_text)    
-    # 合併題號與其內容，排除空字串
     question_list = []
     for i in range(1, len(question_splits), 2):
         question = question_splits[i] + question_splits[i + 1]
@@ -91,7 +96,6 @@ def merge_audio(audio_paths, delay_seconds=3):
     combined.export(output_path, format="mp3")
     print(f"✅ 合併完成，儲存於: {output_path}")
 
-    # 刪除 Question_i.mp3 檔案
     for path in audio_paths:
         try:
             os.remove(path)
