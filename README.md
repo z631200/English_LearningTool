@@ -1,25 +1,35 @@
-# ListeningTest
-Application for generating and conducting listening tests based on videos and uploaded text materials.  
-This project can only run on Windows.
+# LearningTool
+An application for generating and conducting listening tests and text-based quizzes based on videos and uploaded text materials.
+This project currently runs on Windows only.
 
 ## 🎯 Objective
-1. Create a listening test based on a video.
-2. Use speech-to-text to extract transcripts (only for videos with scripts).
-3. Use text-to-speech to read questions aloud during the test.
-4. Generate text-based quizzes from uploaded materials.
+### Listening Test
+1. Create a listening test from a video (local file or YouTube).
+2. Extract transcripts using speech-to-text (best suited for videos with clear speech/script).
+3. Generate listening questions from the transcript using the OpenAI Response API.
+4. Use text-to-speech to read questions aloud during the listening test.
+### Text-Based Quiz
+1. Create a text-based quiz from uploaded text files/materials (no audio required).
+2. Run the text quiz through a Gradio web UI.
+
 
 ## 🧰 Requirements
-1. Whisper (speech-to-text)
-2. OpenAI Response API (for test generation)
-3. OpenAI TTS API (text-to-speech)
+- **Whisper** (speech-to-text transcription)
+- **yt-dlp** (download YouTube videos)
+- **FFmpeg** (audio processing; included under `transcription_maker/tool/` if bundled)
+- **OpenAI Response API** (question generation for both listening and text quizzes)
+- **OpenAI Vector Store / File Search** (store uploaded materials as embeddings for retrieval-augmented question generation)
+- **OpenAI TTS API** (text-to-speech for listening questions)
+- **Gradio** (web UI)
+- **Python packages**: `python-dotenv`, `openai`, `pygame`, `pydub`
 
-## 🔑 OpenAI API Key 設定（必做）
-本專案會從專案根目錄的 `.env` 檔案讀取 OpenAI API Key。
-1. 在專案根目錄建立 `.env` 檔案（與 `app.py` 同一層）。
-2. 在 `.env` 內加入以下內容，並把你的 Key 填上去：
 
+## 🔑 OpenAI API Key Setup (Required)
+This project reads your OpenAI API key from a .env file located in the project root directory.
+1. Create a `.env` file in the project root (same directory as `app.py`).
+2. Add the following line to your `.env` file and paste your API key:
 ```dotenv
-OPENAI_API_KEY=你的_API_KEY_貼在這裡
+OPENAI_API_KEY=your_api_key_here
 ```
 
 ## ⚙️ Workflow
@@ -54,8 +64,9 @@ OPENAI_API_KEY=你的_API_KEY_貼在這裡
 ```
 
 ## 套件
-pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1  
-pip install git+https://github.com/openai/whisper.git
+```
+pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1 git+https://github.com/openai/whisper.git
+```
 
 ## reference
 1. https://platform.openai.com/docs/guides/text?api-mode=chat&prompt-example=code
