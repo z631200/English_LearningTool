@@ -1,11 +1,12 @@
 from openai import OpenAI
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 from pydub import AudioSegment
 from tqdm import tqdm
 import os
 import re
 
+load_dotenv(find_dotenv(), override=True)
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 

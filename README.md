@@ -13,6 +13,15 @@ This project can only run on Windows.
 2. OpenAI Response API (for test generation)
 3. OpenAI TTS API (text-to-speech)
 
+## 🔑 OpenAI API Key 設定（必做）
+本專案會從專案根目錄的 `.env` 檔案讀取 OpenAI API Key。
+1. 在專案根目錄建立 `.env` 檔案（與 `app.py` 同一層）。
+2. 在 `.env` 內加入以下內容，並把你的 Key 填上去：
+
+```dotenv
+OPENAI_API_KEY=你的_API_KEY_貼在這裡
+```
+
 ## ⚙️ Workflow
 1. Use transcrip-tube to extract transcripts from local or YouTube videos (by https://github.com/RexWei1016/transcrip-tube).
 2. Use OpenAI API to automatically generate listening test questions from the transcript or uploaded materials.

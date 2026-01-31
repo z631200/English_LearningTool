@@ -322,7 +322,7 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
 
 if __name__ == "__main__":
     demo.launch(
-        share=True,
-        auth=("123", "123"),
-        # auth_message="需要帳密才能使用"
+        # share=True,
+        # auth=("123", "123"),
+        # # auth_message="需要帳密才能使用"
     )

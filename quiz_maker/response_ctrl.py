@@ -1,14 +1,12 @@
 import asyncio
 from openai import AsyncOpenAI
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 import random
 
-env_path = Path(__file__).resolve().parent.parent / '.env'
-load_dotenv(dotenv_path=env_path)
+load_dotenv(find_dotenv(), override=True)
 api_key = os.getenv("OPENAI_API_KEY")
-
 client = AsyncOpenAI(api_key=api_key)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -59,6 +57,9 @@ async def generate_question_from_text(text: str, quiz_count: str, input_prompt: 
     )
 
     try:
+        if not api_key:
+             raise RuntimeError("OPENAI_API_KEY not found. Check your .env and load_dotenv path.")
+
         print("⏳ 正在產生題目文字檔...")
         response = await client.responses.create(
             model="gpt-4.1-mini",
