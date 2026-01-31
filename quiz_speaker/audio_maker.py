@@ -8,6 +8,8 @@ import re
 
 load_dotenv(find_dotenv(), override=True)
 api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("環境變數 OPENAI_API_KEY 未設定")
 client = OpenAI(api_key=api_key)
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

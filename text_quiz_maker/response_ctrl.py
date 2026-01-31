@@ -1,14 +1,14 @@
 import asyncio
 from openai import AsyncOpenAI
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 import random
 
-env_path = Path(__file__).resolve().parent.parent / '.env'
-load_dotenv(dotenv_path=env_path)
+load_dotenv(find_dotenv(), override=True)
 api_key = os.getenv("OPENAI_API_KEY")
-
+if not api_key:
+    raise RuntimeError("環境變數 OPENAI_API_KEY 未設定")
 client = AsyncOpenAI(api_key=api_key)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

@@ -7,6 +7,8 @@ import random
 
 load_dotenv(find_dotenv(), override=True)
 api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("環境變數 OPENAI_API_KEY 未設定")
 client = AsyncOpenAI(api_key=api_key)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
