@@ -40,7 +40,7 @@ OPENAI_API_KEY=your_api_key_here
 4. Run the text-based quiz in the Gradio UI.
 
 
-## Project Structure
+## 🗂️ Project Structure
 ```
 /
 ├── app.py
@@ -65,12 +65,12 @@ OPENAI_API_KEY=your_api_key_here
     └── response_ctrl.py     # Question generation
 ```
 
-## 套件
+## 📦 Package
 ```
 pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1 git+https://github.com/openai/whisper.git
 ```
 
-## reference
+## 📚 Reference
 1. https://platform.openai.com/docs/guides/text?api-mode=chat&prompt-example=code
 2. https://platform.openai.com/docs/guides/tools-file-search
 3. https://platform.openai.com/docs/guides/text-to-speech
