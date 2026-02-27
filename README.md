@@ -1,4 +1,4 @@
-# LearningTool
+# English_LearningTool
 An application for generating and conducting listening tests and text-based quizzes based on videos and uploaded text materials.
 This project currently runs on Windows only.
 
