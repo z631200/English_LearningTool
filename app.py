@@ -136,40 +136,46 @@ def show_previous_quiz(current_page):
     try:
         if current_page == 0:    
             question_text = normal_quiz_ctrl.get_question_text(1)
-            return question_text, "", gr.update(value=None), 1
+            return question_text, "", gr.update(value=None), 1, 0
         elif current_page == 1:
-            return gr.update(), "已經是第一題", gr.update(value=None), 1
+            return gr.update(), "已經是第一題", gr.update(value=None), 1, 1
         else:
             question_text = normal_quiz_ctrl.get_question_text(current_page - 1)
-            return question_text, "", gr.update(value=None), current_page -1
+            return question_text, "", gr.update(value=None), current_page -1, 0
 
     except Exception as e:
-        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page
+        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page, 0
 
 def show_next_quiz(current_page):
     try:
         question_text = normal_quiz_ctrl.get_question_text(current_page + 1)
         if not question_text:
-            return gr.update(), "已經是最後一題", gr.update(value=None), current_page
-    except Exception as e:
-        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page
-    
-    return question_text, "", gr.update(value=None), current_page + 1
+            # return gr.update(), "已經是最後一題", None, current_page
+            return gr.update(), "已經是最後一題", gr.update(value=None), current_page, 1
 
-def check_answer_text(user_choice, current_page):
+    except Exception as e:
+        return gr.update(), f"⚠️ 發生錯誤：{str(e)}", gr.update(value=None), current_page, 0
+    
+    return question_text, "", gr.update(value=None), current_page + 1, 0
+
+def check_answer_text(user_choice, current_page, status_text_quiz, isEdge):
     try:
         if not current_page or current_page < 1:
             return "❗ 請先載入題目"
+        elif isEdge == 1:
+            isEdge = 0
+            return status_text_quiz, isEdge
+        
         if user_choice:
             correct_answer = normal_quiz_ctrl.get_correct_answer(current_page)
             if user_choice == correct_answer:
-                return "🥳 答案正確！"
+                return "🥳 答案正確！", 0
             else:
-                return f"😢 錯誤。正確答案：{correct_answer}"
+                return f"😢 錯誤。正確答案：{correct_answer}", 0
         else:
-            return gr.update(value="")
+            return gr.update(value=""), 0
     except Exception as e:
-        return f"⛔ 檢查答案時發生錯誤: {str(e)}"
+        return f"⛔ 檢查答案時發生錯誤: {str(e)}", 0
 
 # ====== Gradio interface（加入分類：聽力測驗／文字測驗） ======
 with gr.Blocks(title="TestTools", theme="soft") as demo:
@@ -178,10 +184,10 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
     # 最高層：兩大分類
     with gr.Tabs():
         # ====== 分類一：聽力測驗（包含原 p1 ~ p4） ======
-        with gr.Tab("聽力測驗"):
+        with gr.Tab("Func 1 英文聽力測驗"):
             with gr.Tabs():
                 # p1. YouTube 轉錄
-                with gr.Tab("YouTube 轉錄"):
+                with gr.Tab("step1. YouTube 轉錄"):
                     youtube_url = gr.Textbox(label="YouTube 連結", placeholder="貼上 YouTube 連結")
                     with gr.Row():
                         run_btn = gr.Button("執行轉錄", variant="primary")
@@ -193,7 +199,7 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     show_btn.click(fn=on_show_transcript, inputs=None, outputs=[transcript_box, status_1])
 
                 # p2. 產生題目（聽力）
-                with gr.Tab("產生題目"):
+                with gr.Tab("step2. 產生題目"):
                     quiz_count = gr.Textbox(
                         label="題數", value="", placeholder="輸入要產生的題數"
                     )
@@ -212,7 +218,7 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                         outputs=status_2
                     )
                 # p3. 題目語音（聽力）
-                with gr.Tab("題目語音"):
+                with gr.Tab("step3. 題目語音"):
                     with gr.Row():
                         make_vol_btn = gr.Button("產生音量測試", variant="huggingface")
                         make_audio_btn = gr.Button("產生題目語音", variant="primary")
@@ -224,7 +230,7 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     make_audio_btn.click(fn=on_load_questions_audio, inputs=None, outputs=[quiz_audio, status_3])
 
                 # p4. 檢視與測驗（聽力）
-                with gr.Tab("檢視與測驗"):
+                with gr.Tab("step4. 檢視與測驗"):
                     ans_unlocked = gr.State(False)  # unlock view btn
                     user_answer = gr.Textbox(label="輸入答案", placeholder="例如：A,B,C,D,E")
                     with gr.Row():
@@ -245,10 +251,10 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     )
 
         # ====== 分類二：文字測驗 ======
-        with gr.Tab("文字測驗"):
+        with gr.Tab("Func 2 教材學習測驗"):
             with gr.Tabs():
                 # ====== 教材 / 檔案管理頁面 ======
-                with gr.Tab("教材 / 檔案管理"):
+                with gr.Tab("step1. 教材 / 檔案管理"):
                     with gr.Row():
                         file_upload = gr.File(label="上傳教材檔案", file_count="multiple", type="filepath")
                     status_text_files = gr.Textbox(label="狀態", interactive=False)
@@ -267,7 +273,7 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     )
 
                 # ====== 題目頁面 ======
-                with gr.Tab("產生題目"):
+                with gr.Tab("step2. 產生題目"):
                     quiz_count_text = gr.Textbox(
                         label="題數", value="", placeholder="輸入要產生的題數"
                     )
@@ -287,9 +293,10 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     )
 
                 # ====== 測驗頁面 ======
-                with gr.Tab("檢視與測驗"):
+                with gr.Tab("step3. 檢視與測驗"):
                     current_page = gr.State(0)
                     quiz_text_view = gr.Textbox(label="題目內容", lines=12, interactive=False)
+                    isEdge = gr.State(0)
 
                     with gr.Row():
                         mcq_choice = gr.Radio(
@@ -306,17 +313,17 @@ with gr.Blocks(title="TestTools", theme="soft") as demo:
                     prev_quiz_btn.click(
                         fn=show_previous_quiz,
                         inputs=[current_page],
-                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page]
+                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page, isEdge]
                     )
                     next_quiz_btn.click(
                         fn=show_next_quiz,
                         inputs=[current_page],
-                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page]
+                        outputs=[quiz_text_view, status_text_quiz, mcq_choice, current_page, isEdge]
                     )
-                    mcq_choice.change(
+                    mcq_choice.change(                    
                         fn=check_answer_text,
-                        inputs=[mcq_choice, current_page],
-                        outputs=status_text_quiz
+                        inputs=[mcq_choice, current_page, status_text_quiz, isEdge],
+                        outputs=[status_text_quiz, isEdge]
                     )
 
 
