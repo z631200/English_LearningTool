@@ -38,6 +38,7 @@ ENV/
 *.wav
 *.mp3
 *.txt
+!requirements.txt
 *.srt
 *.vtt
 *.json
