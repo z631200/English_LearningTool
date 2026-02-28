@@ -15,6 +15,7 @@ Provide a simple, Windows-only tool to generate and run both listening tests (fr
 - **OpenAI Vector Store / File Search** (store uploaded materials as embeddings for retrieval-augmented question generation)
 - **OpenAI TTS API** (text-to-speech for listening questions)
 - **Gradio** (web UI)
+- **Python** : 3.11
 - **Python packages**: `python-dotenv`, `openai`, `pygame`, `pydub`
 
 
