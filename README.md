@@ -7,7 +7,6 @@ This project currently runs on Windows only.
 Provide a simple, Windows-only tool to generate and run both listening tests (from videos) and text-based quizzes (from uploaded materials) through a Gradio web interface, using OpenAI for question generation and optional text-to-speech for audio playback.
 
 ## 📖 How to use
-
 1. Clone this project
 2. Set up OpenAI API Key  
    This project reads your OpenAI API key from a `.env` file located in the project root directory.
@@ -16,7 +15,11 @@ Provide a simple, Windows-only tool to generate and run both listening tests (fr
       ```dotenv
       OPENAI_API_KEY=your_api_key_here
       ```
-3. Install required packages in your Python environment
+3. Install required packages in your Python environment (see `requirements.txt`).  
+   If you use Anaconda to create a virtual environment, you only need to run the following command **inside that environment**:
+   ```bash
+   pip install python-dotenv openai pygame pydub yt-dlp gradio==5.44.1 git+https://github.com/openai/whisper.git
+   ```
 4. Run `app.py`
 5. Choose a workflow in the Gradio UI:
 
@@ -66,11 +69,6 @@ Provide a simple, Windows-only tool to generate and run both listening tests (fr
 └── text_quiz_maker/     # Text-based quiz generator
     ├── file_ctrl.py         
     └── response_ctrl.py     # Question generation
-```
-
-## 📦 Package
-```
-pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1 git+https://github.com/openai/whisper.git
 ```
 
 ## 📚 Reference
