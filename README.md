@@ -6,6 +6,35 @@ This project currently runs on Windows only.
 ## 🎯 Objective
 Provide a simple, Windows-only tool to generate and run both listening tests (from videos) and text-based quizzes (from uploaded materials) through a Gradio web interface, using OpenAI for question generation and optional text-to-speech for audio playback.
 
+## 📝 How to use
+
+1. Clone this project
+2. Set up OpenAI API Key  
+   This project reads your OpenAI API key from a `.env` file located in the project root directory.
+   1. Create a `.env` file in the project root (same directory as `app.py`).
+   2. Add the following line to your `.env` file and paste your API key:
+      ```dotenv
+      OPENAI_API_KEY=your_api_key_here
+      ```
+3. Install required packages in your Python environment
+4. Run `app.py`
+
+---
+
+## ⚙️ Workflow
+
+### Listening Test
+
+1. Extract transcripts using speech-to-text from a video (local file or YouTube) with Whisper.
+2. Generate listening questions from the transcript using the OpenAI Response API (you can decide how many questions to create).
+3. Use text-to-speech to read questions aloud during the listening test.
+4. Run the listening test in the Gradio UI.
+
+### Text-Based Quiz
+
+1. Upload the materials to an OpenAI Vector Store for retrieval (File Search / RAG).
+2. Generate text-based quiz questions using the OpenAI Response API with retrieval from the Vector Store.
+3. Run the text-based quiz in the Gradio UI.
 
 ## 🧰 Requirements
 - **Whisper** (speech-to-text transcription)
@@ -17,28 +46,6 @@ Provide a simple, Windows-only tool to generate and run both listening tests (fr
 - **Gradio** (web UI)
 - **Python** : 3.11
 - **Python packages**: `python-dotenv`, `openai`, `pygame`, `pydub`
-
-
-## 🔑 OpenAI API Key Setup (Required)
-This project reads your OpenAI API key from a .env file located in the project root directory.
-1. Create a `.env` file in the project root (same directory as `app.py`).
-2. Add the following line to your `.env` file and paste your API key:
-```dotenv
-OPENAI_API_KEY=your_api_key_here
-```
-
-## ⚙️ Workflow
-### Listening Test
-1. Create a listening test from a video (local file or YouTube).
-2. Extract transcripts using speech-to-text (best suited for videos with clear speech/script).
-3. Generate listening questions from the transcript using the OpenAI Response API.
-4. Use text-to-speech to read questions aloud during the listening test.
-5. Run the listening test in the Gradio UI.
-### Text-Based Quiz
-1. Upload text files/materials.
-2. Upload the materials to an OpenAI Vector Store for retrieval (File Search / RAG).
-3. Generate text-based quiz questions using the OpenAI Response API with retrieval from the Vector Store.
-4. Run the text-based quiz in the Gradio UI.
 
 
 ## 🗂️ Project Structure
@@ -75,3 +82,4 @@ pip install dotenv openai pygame pydub yt-dlp gradio==5.44.1 git+https://github.
 1. https://platform.openai.com/docs/guides/text?api-mode=chat&prompt-example=code
 2. https://platform.openai.com/docs/guides/tools-file-search
 3. https://platform.openai.com/docs/guides/text-to-speech
+4. https://github.com/RexWei1016/transcrip-tube
