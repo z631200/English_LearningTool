@@ -6,7 +6,7 @@ This project currently runs on Windows only.
 ## 🎯 Objective
 Provide a simple, Windows-only tool to generate and run both listening tests (from videos) and text-based quizzes (from uploaded materials) through a Gradio web interface, using OpenAI for question generation and optional text-to-speech for audio playback.
 
-## 📝 How to use
+## 📖 How to use
 
 1. Clone this project
 2. Set up OpenAI API Key  
@@ -18,23 +18,18 @@ Provide a simple, Windows-only tool to generate and run both listening tests (fr
       ```
 3. Install required packages in your Python environment
 4. Run `app.py`
+5. Choose a workflow in the Gradio UI:
 
----
+   ### 🎧 Listening Test
+   1. Extract transcripts using speech-to-text from a video (local file or YouTube) with Whisper.
+   2. Generate listening questions from the transcript using the OpenAI Response API (you can decide how many questions to create).
+   3. Use text-to-speech to read questions aloud during the listening test.
+   4. Run the listening test in the Gradio UI.
 
-## ⚙️ Workflow
-
-### Listening Test
-
-1. Extract transcripts using speech-to-text from a video (local file or YouTube) with Whisper.
-2. Generate listening questions from the transcript using the OpenAI Response API (you can decide how many questions to create).
-3. Use text-to-speech to read questions aloud during the listening test.
-4. Run the listening test in the Gradio UI.
-
-### Text-Based Quiz
-
-1. Upload the materials to an OpenAI Vector Store for retrieval (File Search / RAG).
-2. Generate text-based quiz questions using the OpenAI Response API with retrieval from the Vector Store.
-3. Run the text-based quiz in the Gradio UI.
+   ### 📝 Text-Based Quiz
+   1. Upload the materials to an OpenAI Vector Store for retrieval (File Search / RAG).
+   2. Generate text-based quiz questions using the OpenAI Response API with retrieval from the Vector Store.
+   3. Run the text-based quiz in the Gradio UI.
 
 ## 🧰 Requirements
 - **Whisper** (speech-to-text transcription)
