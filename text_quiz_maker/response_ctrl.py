@@ -80,6 +80,7 @@ async def generate_question_from_text(vector_store_id, quiz_count: str, input_pr
         print("⏳ 正在產生題目文字檔...")
         response = await client.responses.create(
             model="gpt-4.1-mini",
+            # model="gpt-6-luna",
             instructions=system_prompt,
             input=[
                 {"role": "user", "content": user_prompt},

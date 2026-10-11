@@ -1,7 +1,8 @@
 import gradio as gr
 import os
 import glob
-from transcription_maker import whisper_ctrl
+from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
+from transcription_maker import transcription_ctrl
 from quiz_maker import response_ctrl
 from quiz_speaker import audio_maker
 from start_quiz import quiz_ctrl
@@ -45,14 +46,22 @@ def delete_files_in_output_file(full_execution=False):
 
 # ====== Callback ======
 def on_run_transcribe(youtube_url: str):
-    if not youtube_url:
+    if not youtube_url or not youtube_url.strip():
         return "請先輸入 YouTube 連結。"
-    delete_files_in_output_file()
-    transcribe_done = whisper_ctrl.process_youtube_video(youtube_url)
-    if transcribe_done:
-        return "✅ 已完成轉錄"
-    else:
-        return "❌ 未完成轉錄"
+    try:
+        delete_files_in_output_file()
+        transcription_ctrl.process_youtube_video(youtube_url.strip())
+        return "✅ 已完成轉錄（純文字）"
+    except AuthenticationError:
+        return "❌ OpenAI API 金鑰無效，請檢查 OPENAI_API_KEY。"
+    except RateLimitError:
+        return "❌ OpenAI API 額度不足或請求過於頻繁，請確認額度後重試。"
+    except APIConnectionError:
+        return "❌ 無法連線至 OpenAI，請檢查網路後重試。"
+    except APIStatusError as exc:
+        return f"❌ OpenAI 轉錄失敗（HTTP {exc.status_code}），請確認帳號可使用 gpt-transcribe 後重試。"
+    except Exception as exc:
+        return f"❌ 轉錄失敗：{exc}"
 
 def on_show_transcript():
     try:
